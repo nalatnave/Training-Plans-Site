@@ -17,7 +17,7 @@
   --accent:#C8452B; --accent-ink:#FFFFFF; --accent-soft:#F8E3DD;
   --easy:#2E8B7E; --easy-soft:#E1F1EE; --medium:#C08516; --medium-soft:#F7EDD8;
   --hard:#9C2F45; --hard-soft:#F4E0E4; --taper:#6F7F92; --taper-soft:#E7ECF1; --race:#132030; --race-soft:#DCE3EA;
-  --focus:#2F6FD6;
+  --focus:#2F6FD6; --strava:#E34402;
   --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -28,13 +28,13 @@
   --accent:#EE6A4C; --accent-ink:#1A0E0A; --accent-soft:#3A221D;
   --easy:#5CC2B2; --easy-soft:#173330; --medium:#E3AA45; --medium-soft:#362B16;
   --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
-  --focus:#7AA7F0; color-scheme:dark}}
+  --focus:#7AA7F0; --strava:#FF7A3D; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#0F151C; --surface:#17202A; --sunk:#1C2631; --ink:#E5EBF1; --muted:#93A1B0; --line:#2A3644;
   --accent:#EE6A4C; --accent-ink:#1A0E0A; --accent-soft:#3A221D;
   --easy:#5CC2B2; --easy-soft:#173330; --medium:#E3AA45; --medium-soft:#362B16;
   --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
-  --focus:#7AA7F0; color-scheme:dark}
+  --focus:#7AA7F0; --strava:#FF7A3D; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -151,6 +151,16 @@ details[open].card summary h2::before{content:"▾ "}
 .k-race .dt{font-family:var(--f-display);font-weight:700;font-size:18px;text-transform:uppercase}
 .pz{font-family:var(--f-mono);font-size:12.5px;background:var(--ts);color:var(--ink);border-radius:3px;padding:0 3px;white-space:nowrap}
 .day textarea{width:100%;min-height:70px;resize:vertical;margin-top:3px;font-size:14px;line-height:1.4;padding:5px 6px;border-color:var(--focus)}
+
+/* Strava links */
+.sv{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:12px;font-weight:600;color:var(--strava);text-decoration:none;border:1px solid currentColor;border-radius:4px;padding:1px 6px}
+.sv:hover{background:var(--strava);color:#fff}
+.mrow .sv{font-size:10.5px;padding:0 4px;margin-top:4px}
+.dayview .sv{font-size:14px;padding:4px 10px;margin-top:12px}
+.svrow{display:grid;gap:3px;margin-top:6px}
+.svrow label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.svrow input{width:100%;font-size:13px;padding:5px 6px}
+.chip .svd{width:6px;height:6px;border-radius:50%;background:var(--strava);display:inline-block;margin-left:4px;vertical-align:middle}
 
 /* view switcher */
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
@@ -669,6 +679,15 @@ function paceTable(Pc){
   return `<div class="pace-scroll"><table class="paces num"><thead><tr><th>Zone · code</th><th>/mi</th><th>/km</th><th>400</th><th>800</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="hint" style="margin-top:10px">Type a code in any workout and it shows the pace for the current goal time. Add a distance for splits: <span class="code">{5K/400}</span> <span class="code">{HMP/1k}</span> <span class="code">{MP/1mi}</span>. Change the goal and every workout updates.</p>`;
 }
+// Accept a Strava activity URL (or a bare activity id); null means it isn't one.
+function stravaUrl(v){
+  v=String(v||"").trim();if(!v)return"";
+  if(/^\d{5,}$/.test(v))return"https://www.strava.com/activities/"+v;
+  if(!/^https?:\/\//i.test(v))v="https://"+v;
+  try{const u=new URL(v);if(/(^|\.)strava\.com$/i.test(u.hostname)||/^strava\.app\.link$/i.test(u.hostname)){u.protocol="https:";return u.href}}catch(e){}
+  return null;
+}
+const linkOf=(w,di)=>(w.links&&w.links[di])||"";
 function kind(t){
   const s=(t||"").trim().toLowerCase();
   if(!s)return"empty";
@@ -685,7 +704,7 @@ function dayCell(p,wi,di,Pc,v="w"){
     :`<span>${DAYS[di]}</span><span class="num">${d.getUTCDate()}</span>`;
   return `<div class="day k-${k}${RO()?" ro":""}${isToday?" today":""}" data-w="${wi}" data-d="${di}" data-v="${v}"${RO()?"":(v==="d"?"":' draggable="true"')+' tabindex="0"'} aria-label="${DAYS_LONG[di]} ${fmtD(d)}: ${esc(t?plainText(t,Pc):"empty")}${RO()?"":". Press Enter to edit."}">
     <div class="dl">${lbl}</div>
-    <div class="dt">${t?resolveText(t,Pc):"—"}</div></div>`;
+    <div class="dt">${t?resolveText(t,Pc):"—"}</div>${linkOf(w,di)?`<a class="sv" href="${esc(linkOf(w,di))}" target="_blank" rel="noopener" title="Open this run on Strava">${v==="m"?"Strava ↗":"View on Strava ↗"}</a>`:""}</div>`;
 }
 const typeSelect=(wi,w)=>`<select data-wf="type" data-w="${wi}"${RO()?" disabled":""} aria-label="Week ${wi+1} type" title="Changing the type swaps in workbook workouts of that type">${TYPES.map(t=>`<option${t===w.type?" selected":""}>${t}</option>`).join("")}</select>`;
 function weekHTML(p,wi,Pc,nowIdx){
@@ -731,7 +750,7 @@ function dayHTML(p,Pc){
   const i=S.dayIdx,wi=Math.floor(i/7),di=i%7,w=p.weeks[wi],start=mondayOf(toD(p.start)),date=addDays(start,i);
   const toRace=Math.round((toD(p.raceDate)-date)/DAY_MS);
   const chips=DAYS.map((dn,k)=>{const t=w.days[k]||"",d=addDays(start,wi*7+k);
-    return `<button class="chip k-${kind(t)}" data-act="day-go" data-i="${wi*7+k}"${k===di?' aria-current="date"':""}><span class="cd">${dn} ${d.getUTCDate()}</span><span class="ct">${esc(t?plainText(t,Pc).split("\n")[0]:"—")}</span></button>`}).join("");
+    return `<button class="chip k-${kind(t)}" data-act="day-go" data-i="${wi*7+k}"${k===di?' aria-current="date"':""}><span class="cd">${dn} ${d.getUTCDate()}${linkOf(w,k)?'<i class="svd" title="Strava link"></i>':""}</span><span class="ct">${esc(t?plainText(t,Pc).split("\n")[0]:"—")}</span></button>`}).join("");
   return `<div class="dnav">
       <button class="btn" data-act="day-prev"${i<=0?" disabled":""}>‹ Prev</button>
       <div class="dnav-c"><div class="dnav-date">${DAYS_LONG[di]}, ${MONTHS_LONG[date.getUTCMonth()]} ${date.getUTCDate()}</div>
@@ -750,7 +769,7 @@ function calHTML(p,Pc,nowIdx){
   if(S.view==="day")return dayHTML(p,Pc);
   return `<div class="weeks" id="weeks">${p.weeks.map((_,wi)=>weekHTML(p,wi,Pc,nowIdx)).join("")}</div>`;
 }
-const CAL_HINT={week:"Click a day to edit. Drag one day onto another to swap them.",month:"Click a day to edit. Drag one day onto another to swap them.",day:"Click the workout to edit it. Use ← and → to move between days."};
+const CAL_HINT={week:"Click a day to edit it or add its Strava link. Drag one day onto another to swap them.",month:"Click a day to edit it or add its Strava link. Drag one day onto another to swap them.",day:"Click the workout to edit it or add its Strava link. Use ← and → to move between days."};
 function calHeader(){
   return `<div class="seg" role="group" aria-label="Calendar view">${["month","week","day"].map(v=>`<button type="button" data-act="view" data-view="${v}" aria-pressed="${S.view===v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join("")}</div>
     <span class="hint grow">${RO()?"Read-only copy. Use Share & export to take a copy.":CAL_HINT[S.view]}</span>`;
@@ -916,10 +935,18 @@ function openEditor(cell){
   const p=P(),wi=+cell.dataset.w,di=+cell.dataset.d;
   S.editing={wi,di,cell};
   cell.draggable=false;
-  const dt=cell.querySelector(".dt");
+  const dt=cell.querySelector(".dt"),old=cell.querySelector(".sv");if(old)old.remove();
   const ta=document.createElement("textarea");
   ta.value=p.weeks[wi].days[di]||"";ta.id=`ed-${wi}-${di}`;ta.setAttribute("aria-label","Workout");
   dt.replaceWith(ta);
+  const row=document.createElement("div");row.className="svrow";
+  row.innerHTML=`<label for="sv-${wi}-${di}">Strava activity link</label><input type="url" id="sv-${wi}-${di}" placeholder="strava.com/activities/…" value="${esc(linkOf(p.weeks[wi],di))}">`;
+  ta.after(row);
+  const li=row.querySelector("input");
+  li.addEventListener("keydown",ev=>{
+    if(ev.key==="Escape"){ev.preventDefault();S.editing.cancel=true;li.blur()}
+    if(ev.key==="Enter"){ev.preventDefault();li.blur()}
+  });
   const fit=()=>{ta.style.height="auto";ta.style.height=Math.max(70,ta.scrollHeight+2)+"px"};
   ta.addEventListener("input",fit);fit();
   ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
@@ -927,15 +954,24 @@ function openEditor(cell){
     if(ev.key==="Escape"){ev.preventDefault();S.editing.cancel=true;ta.blur()}
     if(ev.key==="Enter"&&(ev.metaKey||ev.ctrlKey)){ev.preventDefault();ta.blur()}
   });
-  ta.addEventListener("blur",()=>setTimeout(()=>{if(S.editing&&S.editing.cell===cell&&document.activeElement!==ta&&!S.trayDown)commitEditor()},0));
+  // commit once focus leaves the whole cell (workout text and link field)
+  cell.addEventListener("focusout",()=>setTimeout(()=>{if(S.editing&&S.editing.cell===cell&&!cell.contains(document.activeElement)&&!S.trayDown)commitEditor()},0));
   showTray();
 }
 function commitEditor(){
   const ed=S.editing;if(!ed)return;S.editing=null;hideTray();
   const p=P(),ta=ed.cell.querySelector("textarea");
   if(p&&ta&&!ed.cancel){
-    const v=ta.value.replace(/\s+$/,"");
-    if(v!==(p.weeks[ed.wi].days[ed.di]||"")){p.weeks[ed.wi].days[ed.di]=v;touch(p)}
+    const w=p.weeks[ed.wi],v=ta.value.replace(/\s+$/,"");
+    let changed=false;
+    if(v!==(w.days[ed.di]||"")){w.days[ed.di]=v;changed=true}
+    const li=ed.cell.querySelector(".svrow input");
+    if(li){
+      const url=stravaUrl(li.value);
+      if(url===null)toast("That isn't a Strava activity link, so it wasn't added. Copy the link from the activity's Share menu.");
+      else if(url!==linkOf(w,ed.di)){if(!w.links)w.links=Array(7).fill("");w.links[ed.di]=url;changed=true}
+    }
+    if(changed)touch(p);
   }
   if(S.remotePending){render();return}
   if(p&&ed.cell.isConnected){const tmp=document.createElement("div");tmp.innerHTML=dayCell(p,ed.wi,ed.di,paces(p),ed.cell.dataset.v);ed.cell.replaceWith(tmp.firstElementChild);if(S.view==="day")renderCal()}
@@ -976,8 +1012,9 @@ document.addEventListener("drop",e=>{
 
 /* ---------- field changes ---------- */
 document.addEventListener("click",e=>{
+  if(e.target.closest&&e.target.closest("a.sv"))return;
   const cell=e.target.closest&&e.target.closest(".day[data-w]");
-  if(cell&&!e.target.closest("textarea")&&!(S.editing&&S.editing.cell===cell)){
+  if(cell&&!e.target.closest("textarea,.svrow")&&!(S.editing&&S.editing.cell===cell)){
     // on phones the month grid is too small to edit in place: open that day instead
     if(cell.dataset.v==="m"&&window.matchMedia("(max-width:760px)").matches){setView("day",+cell.dataset.w*7+ +cell.dataset.d);return}
     openEditor(cell);return}
@@ -985,7 +1022,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("keydown",e=>{
   const cell=e.target.classList&&e.target.classList.contains("day")?e.target:null;
-  if(cell&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openEditor(cell);return}
+  if(cell&&e.target===cell&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openEditor(cell);return}
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="s"){e.preventDefault();if(S.unsaved)savePlan();return}
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
   if(S.view==="day"&&!typing&&!S.editing&&!$("#scrim")&&P()){
@@ -1056,8 +1093,8 @@ async function copyText(text,okMsg){
 function exportable(p){const o=stripId(p);o.format="block-builder/1";return o}
 function csv(p){
   const Pc=paces(p),q=s=>`"${String(s??"").replace(/"/g,'""')}"`;
-  const rows=[["Week","Week of","Type","Miles",...DAYS_LONG]];
-  p.weeks.forEach((w,i)=>rows.push([i+1,iso(addDays(mondayOf(toD(p.start)),i*7)),w.type,w.miles??"",...w.days.map(d=>plainText(d,Pc))]));
+  const rows=[["Week","Week of","Type","Miles",...DAYS_LONG,"Strava links"]];
+  p.weeks.forEach((w,i)=>rows.push([i+1,iso(addDays(mondayOf(toD(p.start)),i*7)),w.type,w.miles??"",...w.days.map(d=>plainText(d,Pc)),DAYS.map((dn,k)=>linkOf(w,k)?dn+": "+linkOf(w,k):"").filter(Boolean).join("\n")]));
   return rows.map(r=>r.map(q).join(",")).join("\n");
 }
 const slug=s=>String(s||"plan").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"plan";
@@ -1167,7 +1204,7 @@ function act(a,btn){
       if(!o||!Array.isArray(o.weeks)||!o.start||!o.raceDate){$("#m-err").textContent="This code is missing weeks or dates. Copy it again from Share & export.";return}
       delete o.format;delete o.id;
       o.settings=Object.assign({startMiles:50,peakMiles:80,step:6,qualityDay:2,longDay:5},o.settings||{});
-      o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||""))}));
+      o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||"")),...(Array.isArray(w.links)?{links:Array.from({length:7},(_,i)=>stravaUrl(w.links[i])||"")}:{})}));
       o.dist=+o.dist||26.2188;o.goal=String(o.goal||"3:00:00");o.name=String(o.name||"Imported plan");
       resize(o);closeModal();guardUnsaved(()=>{addPlan(o);window.scrollTo(0,0);toast("Imported "+o.name)});break;}
     case"del":$("#del-area").innerHTML=`<span class="confirm">Delete “${esc(p.name)}” for everyone? <button class="btn danger" data-act="del-yes">Delete</button><button class="btn ghost" data-act="del-no">Keep</button></span>`;break;
@@ -1193,7 +1230,7 @@ function cleanImported(o){
   if(!o||!Array.isArray(o.weeks)||!o.start||!o.raceDate)throw new Error("missing weeks or dates");
   delete o.format;delete o.id;
   o.settings=Object.assign({startMiles:50,peakMiles:80,step:6,qualityDay:2,longDay:5},o.settings||{});
-  o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||""))}));
+  o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||"")),...(Array.isArray(w.links)?{links:Array.from({length:7},(_,i)=>stravaUrl(w.links[i])||"")}:{})}));
   o.dist=+o.dist||26.2188;o.goal=String(o.goal||"3:00:00");o.name=String(o.name||"Shared plan");
   resize(o);return o;
 }
