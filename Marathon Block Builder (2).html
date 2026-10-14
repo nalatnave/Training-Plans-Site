@@ -1,0 +1,930 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.4 system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Marathon Block Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style id="app-css">
+/* Layout: a training-log desk. Header with race facts, then the mileage profile beside the pace sheet, then the week-by-week calendar. */
+:root{
+  --paper:#EEF2F5; --surface:#FFFFFF; --sunk:#F5F7F9; --ink:#132030; --muted:#5A6878; --line:#D6DDE4;
+  --accent:#C8452B; --accent-ink:#FFFFFF; --accent-soft:#F8E3DD;
+  --easy:#2E8B7E; --easy-soft:#E1F1EE; --medium:#C08516; --medium-soft:#F7EDD8;
+  --hard:#9C2F45; --hard-soft:#F4E0E4; --taper:#6F7F92; --taper-soft:#E7ECF1; --race:#132030; --race-soft:#DCE3EA;
+  --focus:#2F6FD6;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F151C; --surface:#17202A; --sunk:#1C2631; --ink:#E5EBF1; --muted:#93A1B0; --line:#2A3644;
+  --accent:#EE6A4C; --accent-ink:#1A0E0A; --accent-soft:#3A221D;
+  --easy:#5CC2B2; --easy-soft:#173330; --medium:#E3AA45; --medium-soft:#362B16;
+  --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
+  --focus:#7AA7F0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F151C; --surface:#17202A; --sunk:#1C2631; --ink:#E5EBF1; --muted:#93A1B0; --line:#2A3644;
+  --accent:#EE6A4C; --accent-ink:#1A0E0A; --accent-soft:#3A221D;
+  --easy:#5CC2B2; --easy-soft:#173330; --medium:#E3AA45; --medium-soft:#362B16;
+  --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
+  --focus:#7AA7F0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:0 120px}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--line)}
+.top-in{max-width:1240px;margin:0 auto;padding:10px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.02em;text-transform:uppercase;margin-right:6px;white-space:nowrap}
+.brand b{color:var(--accent)}
+.top select{min-width:0;max-width:280px;flex:1 1 180px}
+.status{margin-left:auto;font-size:13px;color:var(--muted);white-space:nowrap}
+.status.err{color:var(--accent)}
+
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:500;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--accent);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+select,input[type=text],input[type=date],input[type=number],textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+input:hover,select:hover{border-color:var(--muted)}
+
+/* plan header */
+.head{padding-block:26px 18px;display:grid;gap:16px}
+.eyebrow{font-family:var(--f-display);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px;color:var(--muted)}
+.title-in{font-family:var(--f-display);font-weight:700;font-size:clamp(32px,5vw,52px);line-height:1;border:0;background:transparent;padding:0;width:100%;letter-spacing:-.005em;border-bottom:2px solid transparent;border-radius:0}
+.title-in:hover{border-bottom-color:var(--line)}
+.title-in:focus{border-bottom-color:var(--accent);outline:none}
+.fields{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select{width:100%}
+.field small{font-size:12px;color:var(--muted)}
+.stats{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.stat{padding:10px 18px;border-right:1px solid var(--line);display:grid;gap:0;flex:1 1 120px}
+.stat:last-child{border-right:0}
+.stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.stat .v{font-family:var(--f-display);font-weight:600;font-size:26px;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat .v small{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:500;margin-left:3px}
+
+/* cards */
+.row2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
+.card h2{font-family:var(--f-display);font-weight:700;font-size:21px;text-transform:uppercase;letter-spacing:.03em;margin:0}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+#chart{width:100%;height:240px;display:block;touch-action:none;user-select:none}
+#chart text{font-family:var(--f-body);font-size:11px;fill:var(--muted)}
+#chart .ml{font-family:var(--f-mono);font-size:10.5px;fill:var(--ink)}
+#chart .grid{stroke:var(--line);stroke-width:1}
+#chart .col{cursor:pointer;fill:transparent}
+#chart .bar{transition:fill .15s}
+#chart .handle{fill:var(--ink);opacity:0}
+#chart g.wk:hover .handle,#chart g.wk.drag .handle{opacity:.85}
+#chart g.wk.now .bar{stroke:var(--ink);stroke-width:1.5}
+
+table.paces{width:100%;border-collapse:collapse;font-size:14px}
+.paces th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:right;padding:4px 5px;border-bottom:1px solid var(--line)}
+.paces th:first-child,.paces td:first-child{text-align:left}
+.paces td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--f-mono);font-size:13px;white-space:nowrap}
+.paces tr:last-child td{border-bottom:0}
+.paces td:first-child{font-family:var(--f-body);font-size:14px}
+.code{font-family:var(--f-mono);font-size:11.5px;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--muted)}
+.pace-scroll{overflow-x:auto}
+
+details.card summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary h2::before{content:"▸ ";color:var(--muted);font-size:16px}
+details[open].card summary h2::before{content:"▾ "}
+.gl-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:14px}
+.gl-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.confirm{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);border-radius:6px;padding:6px 10px;font-size:14px}
+
+/* weeks */
+.sect-h{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin:30px 0 10px}
+.sect-h h2{font-family:var(--f-display);font-weight:700;font-size:26px;text-transform:uppercase;letter-spacing:.03em;margin:0}
+.weeks{display:grid;gap:10px}
+.week{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;--tc:var(--easy);--ts:var(--easy-soft)}
+.week.t-Medium{--tc:var(--medium);--ts:var(--medium-soft)}
+.week.t-Hard{--tc:var(--hard);--ts:var(--hard-soft)}
+.week.t-Taper{--tc:var(--taper);--ts:var(--taper-soft)}
+.week.t-Race{--tc:var(--race);--ts:var(--race-soft)}
+.week.now{box-shadow:0 0 0 2px var(--ink)}
+.wk-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--ts);border-bottom:1px solid var(--line)}
+.wk-num{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1;color:var(--tc);min-width:58px}
+.wk-dates{font-size:14px;font-weight:600}
+.wk-head .sp{flex:1}
+.wk-head select{padding:4px 6px;font-size:13px;font-weight:600;border-color:transparent;background:var(--surface)}
+.wk-miles{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--muted)}
+.wk-miles input{width:64px;padding:4px 6px;text-align:right;font-family:var(--f-mono);font-size:13px}
+.togo{font-size:12px;color:var(--muted);white-space:nowrap}
+.badge{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--ink);color:var(--paper);border-radius:4px;padding:2px 6px}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.day{border-right:1px solid var(--line);padding:8px 10px 10px;min-height:86px;cursor:text;position:relative;min-width:0}
+.day:last-child{border-right:0}
+.day:hover{background:var(--sunk)}
+.day.ro{cursor:default}
+.day.drop{background:var(--accent-soft)}
+.dl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between}
+.dt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;margin-top:3px}
+.k-empty .dt{color:var(--muted)}
+.k-easy .dt,.k-rest .dt{color:var(--muted)}
+.k-work .dt{font-weight:500}
+.k-work{box-shadow:inset 3px 0 0 var(--tc)}
+.k-race{background:var(--race-soft)}
+.k-race .dt{font-family:var(--f-display);font-weight:700;font-size:18px;text-transform:uppercase}
+.pz{font-family:var(--f-mono);font-size:12.5px;background:var(--ts);color:var(--ink);border-radius:3px;padding:0 3px;white-space:nowrap}
+.day textarea{width:100%;min-height:70px;resize:vertical;margin-top:3px;font-size:14px;line-height:1.4;padding:5px 6px;border-color:var(--focus)}
+
+/* token tray */
+.tray{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.08)}
+.tray-in{max-width:1240px;margin:0 auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tray .lbl{font-size:12px;color:var(--muted);margin-right:4px}
+.tok{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);background:var(--sunk);border-radius:4px;padding:4px 7px;cursor:pointer}
+.tok:hover{border-color:var(--muted)}
+.tok b{font-weight:500;color:var(--muted);margin-left:4px}
+
+/* share */
+.share{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:30px}
+.share .card p{margin:6px 0 12px;font-size:14px;color:var(--muted)}
+.share .btns{display:flex;gap:8px;flex-wrap:wrap}
+textarea.io{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;margin-bottom:8px}
+
+.empty{padding:60px 0;display:grid;gap:14px;justify-items:start;max-width:560px}
+.empty h1{font-family:var(--f-display);font-size:44px;margin:0;line-height:1}
+.empty p{margin:0;color:var(--muted)}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(10,16,24,.45);z-index:40;display:grid;place-items:center;padding:16px}
+.modal{background:var(--surface);border-radius:10px;padding:20px;width:min(520px,100%);display:grid;gap:12px;max-height:90vh;overflow:auto}
+.modal h3{font-family:var(--f-display);font-size:26px;margin:0;text-transform:uppercase}
+.modal .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:50;background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:6px;font-size:14px;max-width:calc(100% - 32px)}
+
+@media (max-width:980px){
+  .row2{grid-template-columns:minmax(0,1fr)}
+  .fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .gl-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .share{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:760px){
+  .wrap{padding-inline:16px}
+  .top-in{padding:10px 16px}
+  .fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .gl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .days{grid-template-columns:minmax(0,1fr)}
+  .day{border-right:0;border-bottom:1px solid var(--line);min-height:0;display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;padding:8px 12px}
+  .day:last-child{border-bottom:0}
+  .dl{flex-direction:column;justify-content:flex-start}
+  .dt{margin-top:0}
+  .day textarea{grid-column:2}
+  .stat{flex-basis:45%}
+  .status{order:5;margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<header class="top" id="topbar"></header><main class="wrap" id="app"><div class="empty"><p class="eyebrow">Loading</p><h1>Opening your plan library…</h1></div></main><div id="layer"></div>
+<script type="application/json" id="snapshot">{"updatedAt":1791999751069,"plans":{"p_jt0rsdz314rb":{"name":"Derks CIM","athlete":"Derks","race":"CIM","dist":26.2188,"start":"2026-10-19","raceDate":"2026-12-06","goal":"2:45:00","settings":{"startMiles":40,"peakMiles":65,"step":6,"qualityDay":2,"longDay":5},"weeks":[{"type":"Easy","miles":53,"days":["Easy","Easy","Easy","Easy + strides","Easy","Easy long run 12mi","Easy"]},{"type":"Medium","miles":59,"days":["Easy","Easy","6 x 800 @ {10K/800}, 2min rest","Easy + strides","Easy","4mi WU\n6mi @ {T}\n4mi CD","Easy"]},{"type":"Hard","miles":65,"days":["Easy","Easy","2mi @ {T}\n3min rest\n4 x 400 @ {5K/400}, 60s rest\n3min rest\n2mi @ {T}","Easy + strides","Easy","4mi WU\n8 x 1mi @ {MP}–{HMP}, 2min rest\n4mi CD","Easy"]},{"type":"Medium","miles":55,"days":["Easy","Easy","4-3-2-1 min hard / equal easy float","Easy + strides","Easy + strides","4mi WU\n8mi @ {T}\n4mi CD","Easy"]},{"type":"Medium","miles":47,"days":["Easy","Easy","8 x 1k @ {HMP/1k}, 90s rest\n2 x 4 x 200 @ {MILE/200}, 90s rep rest, 3min set rest","Easy + strides","Easy","18mi with 14mi @ {MP}\n3mi WU, 3mi CD","Easy"]},{"type":"Taper","miles":42,"days":["Easy","Easy","6 x 1k @ {HMP/1k}, 90s rest","Easy + strides","Easy","10mi with 5mi @ {MP}","Easy"]},{"type":"Race","miles":38,"days":["Rest","Easy","Easy + strides","Easy","Easy","Shakeout 3mi + strides\nTypical pre-race","RACE DAY\nGoal {GOAL} · {MP}"]}],"updatedAt":1791999489656}}}</script>
+<script id="app-js">
+(()=>{
+"use strict";
+/* ---------- page source, used to republish the page with a read-only snapshot ---------- */
+const HEAD_LINKS=`<title>Marathon Block Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">`;
+const SHELL_BODY=`<header class="top" id="topbar"></header><main class="wrap" id="app"><div class="empty"><p class="eyebrow">Loading</p><h1>Opening your plan library…</h1></div></main><div id="layer"></div>`;
+const RESET=`:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.4 system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}`;
+let SNAP=null;
+try{SNAP=JSON.parse(document.getElementById("snapshot").textContent)}catch(e){SNAP=null}
+function buildPage(snap){
+  const css=document.getElementById("app-css").textContent,js=document.getElementById("app-js").textContent;
+  const data=JSON.stringify(snap).replace(/</g,"\\u003c");
+  return `<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>${RESET}</style></head><body>${HEAD_LINKS}
+<style id="app-css">${css}</style>
+${SHELL_BODY}
+<script type="application/json" id="snapshot">${data}<\/script>
+<script id="app-js">${js}<\/script>
+</body></html>`;
+}
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const DAYS_LONG=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const TYPES=["Easy","Medium","Hard","Taper","Race"];
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY_MS=864e5;
+const toD=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(Date.UTC(y,m-1,d))};
+const iso=d=>d.toISOString().slice(0,10);
+const addDays=(d,n)=>new Date(d.getTime()+n*DAY_MS);
+const dow=d=>(d.getUTCDay()+6)%7; // Mon=0
+const mondayOf=d=>addDays(d,-dow(d));
+const fmtD=d=>`${MON[d.getUTCMonth()]} ${d.getUTCDate()}`;
+const fmtLong=d=>`${DAYS[dow(d)]}, ${MON[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+const todayD=()=>{const n=new Date();return new Date(Date.UTC(n.getFullYear(),n.getMonth(),n.getDate()))};
+const uid=()=>"p_"+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* ---------- paces ---------- */
+function parseTime(s,dist){
+  const p=String(s||"").trim().split(":").map(Number);
+  if(!p.length||p.some(isNaN))return null;
+  if(p.length===3)return p[0]*3600+p[1]*60+p[2];
+  if(p.length===2)return dist>=13?p[0]*3600+p[1]*60:p[0]*60+p[1];
+  return null;
+}
+function fmtSec(s,forceMin){
+  s=Math.round(s);
+  if(s<60&&!forceMin)return s+"s";
+  const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
+  return h?`${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}`:`${m}:${String(x).padStart(2,"0")}`;
+}
+const ZONES=[
+  {k:"E",name:"Easy",d:null},
+  {k:"MP",name:"Marathon",d:26.2188},
+  {k:"HMP",name:"Half marathon",d:13.1094},
+  {k:"T",name:"Threshold (15K)",d:9.3206},
+  {k:"10K",name:"10K",d:6.2137},
+  {k:"5K",name:"5K",d:3.1069},
+  {k:"MILE",name:"Mile",d:1},
+];
+// Riegel: T2 = T1 * (d2/d1)^1.06. Returns seconds per mile for each zone.
+function paces(plan){
+  const dist=+plan.dist||26.2188, T=parseTime(plan.goal,dist);
+  if(!T)return null;
+  const per=d=>T*Math.pow(d/dist,1.06)/d;
+  const out={};
+  for(const z of ZONES){
+    if(z.k==="E"){const mp=per(26.2188);out.E=[mp*1.2,mp*1.3];}
+    else out[z.k]=per(z.d);
+  }
+  out.GOAL=T;
+  return out;
+}
+function splitMeters(n,u){n=parseFloat(n);u=(u||"m").toLowerCase();return u==="mi"?n*1609.344:(u==="k"||u==="km")?n*1000:n}
+const TOKEN=/\{(E|MP|HMP|T|10K|5K|MILE|GOAL)(?:\/([\d.]+)\s*(k|km|mi|m)?)?\}/gi;
+function resolveText(text,P){
+  // escapes text, then swaps pace codes for highlighted paces
+  const s=esc(text);
+  if(!P)return s;
+  return s.replace(TOKEN,(all,z,n,u)=>{
+    z=z.toUpperCase();
+    if(z==="GOAL")return `<span class="pz">${fmtSec(P.GOAL)}</span>`;
+    let v=P[z];
+    if(n){
+      const m=splitMeters(n,u),f=x=>fmtSec(x*m/1609.344);
+      return `<span class="pz" title="${z} pace">${Array.isArray(v)?f(v[0])+"–"+f(v[1]):f(v)}</span>`;
+    }
+    return `<span class="pz" title="${z} pace">${Array.isArray(v)?fmtSec(v[0],1)+"–"+fmtSec(v[1],1):fmtSec(v,1)}/mi</span>`;
+  });
+}
+const plainText=(text,P)=>{const d=document.createElement("div");d.innerHTML=resolveText(text,P);return d.textContent};
+
+/* ---------- guideline (distilled from the 2026 Chicago block) ---------- */
+// 13 quality weeks, oldest first: [midweek session, long run].
+const BUILD=[
+  ["Easy","Easy long run 12mi"],
+  ["10 x 400 @ {5K/400}, 60s rest","12mi, last 3mi @ {T}"],
+  ["4 x 1mi @ {MP}, 90s rest","3mi WU\n3 x 2mi @ {MP}\n3mi CD"],
+  ["4 x 800 @ {5K/800}, 2min rest\n5min rest\n8 x 200 hill, 60s rest","16mi with 6mi @ {T}"],
+  ["5 x 1k @ {HMP/1k}, 90s rest","3mi WU\n3 x 3mi @ {T}, 1mi rest\n2mi CD"],
+  ["2 x 1mi @ {HMP}\n4 x 400 @ {5K/400}\n2 x 1mi @ {HMP}\nall 90s rest","3mi WU\n2 x 4mi @ {MP}–{HMP}, 1mi rest\n3mi CD"],
+  ["10 x 800 @ {10K/800}, 2min rest","4mi WU\n8mi @ {T}\n4mi CD"],
+  ["Easy with 6 x 1min on/off","Easy 16mi (down week)"],
+  ["2 x 5 x 300 @ {5K/300}\n6 x 200 @ {MILE/200}\nrep rest 90s, set rest 5min","16mi with 8mi progression from {MP} down to {HMP}"],
+  ["6 x 1mi @ {HMP}, 2min rest","16mi with 2 x 4mi @ {MP}–{HMP}, 5min rest"],
+  ["8 x 1k @ {HMP/1k}, 90s rest","16mi with 6 x 4min @ {HMP}, 1min rest"],
+  ["6 x (1mi @ {HMP/1mi} + 800 @ {5K/800})\n60s rep rest, 2min set rest","20mi easy"],
+  ["2mi @ {T}\n3min rest\n4 x 400 @ {5K/400}, 60s rest\n3min rest\n2mi @ {T}","4mi WU\n8 x 1mi @ {MP}–{HMP}, 2min rest\n4mi CD"],
+];
+const TAPER=[
+  ["4-3-2-1 min hard / equal easy float","20mi with 14mi @ {MP}\n3mi WU, 3mi CD"],
+  ["8 x 1k @ {HMP/1k}, 90s rest\n2 x 4 x 200 @ {MILE/200}, 90s rep rest, 3min set rest","2mi WU\n2 x 6mi @ {MP}, 5min rest\n2mi CD"],
+  ["6 x 1k @ {HMP/1k}, 90s rest","10mi with 5mi @ {MP}"],
+];
+const TAPER_PCT=[.85,.72,.64],RACE_PCT=.58;
+
+function weekCount(plan){
+  const a=mondayOf(toD(plan.start)),b=mondayOf(toD(plan.raceDate));
+  return Math.max(1,Math.round((b-a)/DAY_MS/7)+1);
+}
+function blankWeek(){return{type:"Easy",miles:null,days:Array(7).fill("")}}
+function baseDays(s){
+  const d=Array(7).fill("Easy");
+  d[3]="Easy + strides";
+  if(s.longDay===3||s.qualityDay===3)d[4]="Easy + strides";
+  return d;
+}
+function raceWeekDays(plan){
+  const r=dow(toD(plan.raceDate)),d=Array(7).fill("Easy");
+  for(let i=0;i<7;i++){
+    if(i>r)d[i]="Rest";
+    else if(i===r)d[i]="RACE DAY\nGoal {GOAL} · {MP}";
+    else if(i===r-1)d[i]="Shakeout 3mi + strides\nTypical pre-race";
+    else if(i===r-4)d[i]="Easy + strides";
+  }
+  if(r>=6)d[0]="Rest";
+  return d;
+}
+function generate(plan,{miles=true,workouts=true}={}){
+  const s=plan.settings, n=weekCount(plan);
+  const taperN=Math.min(TAPER.length,Math.max(0,n-2)), buildN=n-1-taperN;
+  const weeks=[];
+  for(let i=0;i<n;i++)weeks.push(plan.weeks[i]?clone(plan.weeks[i]):blankWeek());
+  // mileage: 3-week blocks (Easy, Hard, Medium) rising toward peak; taper as % of peak
+  if(miles){
+    const peak=+s.peakMiles||80, step=+s.step||0, start=+s.startMiles||Math.round(peak*.6);
+    const nBlocks=Math.ceil(buildN/3), top=peak-2*step;
+    const inc=nBlocks>1?(top-start)/(nBlocks-1):0;
+    for(let i=0;i<buildN;i++){
+      const j=buildN-1-i, bfe=Math.floor(j/3), within=2-(j%3);
+      weeks[i].miles=Math.max(0,Math.round(top-bfe*inc+within*step));
+      weeks[i].type=["Easy","Hard","Medium"][within];
+    }
+    for(let t=0;t<taperN;t++){const w=weeks[buildN+t];w.miles=Math.round(peak*TAPER_PCT[t]);w.type="Taper"}
+    weeks[n-1].miles=Math.round(peak*RACE_PCT);weeks[n-1].type="Race";
+  }
+  if(workouts){
+    const L=BUILD.length;
+    for(let i=0;i<buildN;i++){
+      let src=null;
+      if(buildN>=L){const k=i-(buildN-L);if(k>=0)src=BUILD[k]}
+      else src=BUILD[buildN===1?L-1:Math.round(L-1-(buildN-1-i)*(L-1)/(buildN-1))];
+      const d=baseDays(s);
+      if(src&&src[0]!=="Easy")d[s.qualityDay]=src[0];
+      if(src)d[s.longDay]=src[1];else d[s.longDay]="Easy long run";
+      weeks[i].days=d;
+    }
+    for(let t=0;t<taperN;t++){
+      const d=baseDays(s);d[s.qualityDay]=TAPER[t][0];d[s.longDay]=TAPER[t][1];weeks[buildN+t].days=d;
+    }
+    weeks[n-1].days=raceWeekDays(plan);
+  }
+  plan.weeks=weeks;
+  return plan;
+}
+// Keep weeks aligned to race day when dates move: add/drop weeks at the start.
+function resize(plan){
+  const n=weekCount(plan),cur=plan.weeks.length;
+  if(n>cur){
+    const first=plan.weeks[0]||blankWeek(),add=[];
+    for(let i=0;i<n-cur;i++){const w=blankWeek();w.miles=first.miles;w.days=baseDays(plan.settings);w.days[plan.settings.longDay]="Easy long run";add.push(w)}
+    plan.weeks=add.concat(plan.weeks);
+    return `Added ${n-cur} base week${n-cur>1?"s":""} at the start`;
+  }
+  if(n<cur){plan.weeks=plan.weeks.slice(cur-n);return `Removed ${cur-n} week${cur-n>1?"s":""} from the start`}
+  return "";
+}
+function newPlan(o={}){
+  const race=o.raceDate||iso(addDays(todayD(),7*18));
+  const p={name:o.name||"New marathon block",athlete:o.athlete||"",race:o.race||"",dist:+o.dist||26.2188,
+    start:o.start||iso(addDays(mondayOf(toD(race)),-7*17)),raceDate:race,goal:o.goal||"2:45:00",
+    settings:Object.assign({startMiles:50,peakMiles:80,step:6,qualityDay:2,longDay:5},o.settings||{}),weeks:[],updatedAt:Date.now()};
+  return generate(p);
+}
+
+/* ---------- store: shared plan library (db), falling back to this browser ---------- */
+const S={mode:"loading",col:null,plans:{},cur:null,dirty:new Set(),timers:{},writing:{},again:{},editing:null,remotePending:false};
+const LS="blockbuilder.plans.v1";
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const RO=()=>S.mode==="snapshot";
+function status(t,err){S.statusText=t;S.statusErr=!!err;const el=$("#status");if(!el)return;el.textContent=t;el.classList.toggle("err",!!err)}
+function renderTop(){
+  $("#topbar").innerHTML=`<div class="top-in">
+    <div class="brand">Block<b>/</b>Builder</div>
+    <select id="planSel" aria-label="Open a plan"></select>
+    ${RO()?'<span class="badge">Read-only copy</span>':S.mode==="loading"?"":'<button class="btn primary" data-act="new">+ New plan</button>'}
+    <span class="status${S.statusErr?" err":""}" id="status">${esc(S.statusText||"Loading plans…")}</span></div>`;
+  renderSelect();
+}
+const fmtStamp=ms=>{const d=new Date(ms);return `${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`};
+function stripId(p){const o=clone(p);delete o.id;return o}
+
+async function initStore(){
+  renderTop();
+  let db=null;
+  try{db=window.claude&&window.claude.use?await window.claude.use("db"):null}catch(e){db=null}
+  if(db){
+    S.mode="db";S.col=db.collection("plans");
+    S.col.onSnapshot(snap=>{
+      const seen=new Set();let curChanged=false;
+      snap.docs.forEach(doc=>{
+        seen.add(doc.id);
+        if(S.dirty.has(doc.id))return;
+        const data=doc.data();if(!data)return;
+        const have=S.plans[doc.id];
+        if(!have||have.updatedAt!==data.updatedAt){S.plans[doc.id]=Object.assign(data,{id:doc.id});if(doc.id===S.cur)curChanged=true}
+      });
+      for(const id of Object.keys(S.plans))if(!seen.has(id)&&!S.dirty.has(id)){delete S.plans[id];if(id===S.cur)curChanged=true}
+      if(S.mode==="db"&&!S.dirty.size&&!S.statusErr)status("Saved to shared library");
+      afterLoad(curChanged);
+    },err=>status("Couldn't reach the plan library: "+(err&&err.message||"try reloading"),true));
+    renderTop();
+    // editors get the button that refreshes the public read-only copy
+    try{const u=window.claude.use?await window.claude.use("user"):null;S.canPublish=u?await u.canEdit():true}catch(e){S.canPublish=true}
+    if(P())render();
+  }else if(SNAP&&SNAP.plans&&Object.keys(SNAP.plans).length){
+    S.mode="snapshot";
+    for(const id in SNAP.plans)S.plans[id]=Object.assign(clone(SNAP.plans[id]),{id});
+    status("Updated "+fmtStamp(SNAP.updatedAt));
+    renderTop();afterLoad(true);
+  }else{
+    S.mode="local";
+    try{const raw=JSON.parse(lsGet(LS)||"{}");for(const id in raw)S.plans[id]=Object.assign(raw[id],{id})}catch(e){}
+    status("Saving in this browser only");
+    renderTop();afterLoad(true);
+  }
+}
+async function publishSnapshot(btn){
+  btn.disabled=true;btn.textContent="Updating…";
+  if(S.editing)commitEditor();
+  for(const id of Object.keys(S.timers))if(S.timers[id]){clearTimeout(S.timers[id]);S.timers[id]=null;await flush(id)}
+  const fail=msg=>{btn.disabled=false;btn.textContent="Update public copy";const n=$("#pub-note");if(n)n.textContent=msg};
+  let art=null;try{art=window.claude&&window.claude.use?await window.claude.use("artifact"):null}catch(e){}
+  if(!art)return fail("Updating the public copy isn't available in this view. Open the page on claude.ai while signed in.");
+  const plans={};for(const id in S.plans)plans[id]=stripId(S.plans[id]);
+  try{
+    await art.publish(buildPage({updatedAt:Date.now(),plans}));
+    toast("Public copy updated. Reloading…");
+  }catch(e){
+    const c=e&&e.code;
+    if(c==="conflict")return fail("The page was just updated somewhere else and is reloading. Try again once it reloads.");
+    if(c==="not_writer"||c==="not_granted"){S.canPublish=false;return fail("Only people who can edit this page can update the public copy.")}
+    if(c==="rate_limited")return fail("Updated too often. Wait a minute and try again.");
+    fail("Couldn't update the public copy: "+(e&&e.message||"try again"));
+  }
+}
+function publicCard(){
+  if(S.mode!=="db"||!S.canPublish)return"";
+  const has=SNAP&&SNAP.updatedAt,latest=Math.max(0,...Object.values(S.plans).map(p=>p.updatedAt||0));
+  const state=!has?"No public copy yet.":latest>SNAP.updatedAt?`Last updated ${fmtStamp(SNAP.updatedAt)}. You've made changes since then.`:`Up to date as of ${fmtStamp(SNAP.updatedAt)}.`;
+  return `<div class="card"><h2>Public read-only copy</h2>
+    <p>People without a Claude account see your plans as they were when you last clicked Update. Turn on the public link from this page's Share menu. Updating saves a new version of the page and reloads it.</p>
+    <p class="hint" id="pub-note" style="margin-top:-4px">${state}</p>
+    <div class="btns"><button class="btn primary" data-act="publish-snap">Update public copy</button></div></div>`;
+}
+function saveLocal(){const o={};for(const id in S.plans)o[id]=stripId(S.plans[id]);lsSet(LS,JSON.stringify(o))}
+function touch(p){
+  p.updatedAt=Date.now();S.dirty.add(p.id);
+  clearTimeout(S.timers[p.id]);
+  S.timers[p.id]=setTimeout(()=>{S.timers[p.id]=null;flush(p.id)},600);
+  status("Saving…");
+}
+async function flush(id){
+  if(S.writing[id]){S.again[id]=true;return}
+  const p=S.plans[id];if(!p){S.dirty.delete(id);return}
+  S.writing[id]=true;
+  try{
+    if(S.mode==="db")await S.col.doc(id).set(stripId(p));else saveLocal();
+    status(S.mode==="db"?"Saved to shared library":"Saved in this browser only");
+  }catch(e){
+    status(e&&e.code==="not_granted"?"View only: you can't save changes to this library":"Not saved: "+(e&&e.message||"try again"),true);
+  }
+  S.writing[id]=false;
+  if(S.again[id]){S.again[id]=false;return flush(id)}
+  if(!S.timers[id])S.dirty.delete(id);
+}
+async function removePlan(id){
+  delete S.plans[id];S.dirty.delete(id);clearTimeout(S.timers[id]);
+  try{if(S.mode==="db")await S.col.doc(id).delete();else saveLocal();status("Plan deleted")}
+  catch(e){status("Couldn't delete: "+(e&&e.message||"try again"),true)}
+}
+function addPlan(p){
+  p.id=p.id||uid();S.plans[p.id]=p;S.cur=p.id;lsSet("blockbuilder.cur",p.id);
+  touch(p);clearTimeout(S.timers[p.id]);S.timers[p.id]=null;flush(p.id);
+  render();
+}
+function afterLoad(curChanged){
+  const ids=Object.keys(S.plans);
+  if(!S.cur||!S.plans[S.cur]){
+    const want=lsGet("blockbuilder.cur");
+    S.cur=want&&S.plans[want]?want:ids.sort((a,b)=>(S.plans[b].updatedAt||0)-(S.plans[a].updatedAt||0))[0]||null;
+    curChanged=true;
+  }
+  renderSelect();
+  if(curChanged){if(S.editing)S.remotePending=true;else render()}
+}
+const P=()=>S.plans[S.cur];
+
+/* ---------- render ---------- */
+function renderSelect(){
+  const sel=$("#planSel");if(!sel)return;const ids=Object.keys(S.plans).sort((a,b)=>(S.plans[a].raceDate<S.plans[b].raceDate?1:-1));
+  sel.innerHTML=ids.length?ids.map(id=>`<option value="${id}"${id===S.cur?" selected":""}>${esc(S.plans[id].name||"Untitled plan")} · ${esc(S.plans[id].raceDate||"")}</option>`).join(""):`<option>No plans yet</option>`;
+  sel.disabled=!ids.length;
+}
+function stats(p,Pc){
+  const ms=p.weeks.map(w=>+w.miles||0),tot=ms.reduce((a,b)=>a+b,0),peak=Math.max(0,...ms);
+  const t=todayD(),r=toD(p.raceDate),days=Math.round((r-t)/DAY_MS);
+  const togo=days>0?`${days}<small>days to go</small>`:days===0?`Today`:`Done<small>${fmtD(r)}</small>`;
+  return `<div class="stats">
+    <div class="stat"><span class="k">Race day</span><span class="v">${fmtD(r)}<small>${DAYS[dow(r)]}</small></span></div>
+    <div class="stat"><span class="k">Countdown</span><span class="v">${togo}</span></div>
+    <div class="stat"><span class="k">Goal pace</span><span class="v">${Pc?fmtSec(Pc.MP,1):"—"}<small>/mi</small></span></div>
+    <div class="stat"><span class="k">Length</span><span class="v">${p.weeks.length}<small>weeks</small></span></div>
+    <div class="stat"><span class="k">Peak week</span><span class="v">${peak||"—"}<small>mi</small></span></div>
+    <div class="stat"><span class="k">Block total</span><span class="v">${tot.toLocaleString()}<small>mi</small></span></div>
+  </div>`;
+}
+function paceTable(Pc){
+  if(!Pc)return `<p class="hint">Enter a goal time like 2:45:00 to see training paces.</p>`;
+  const f=(v,m)=>Array.isArray(v)?`${fmtSec(v[0]*m/1609.344,!0)}–${fmtSec(v[1]*m/1609.344,!0)}`:fmtSec(v*m/1609.344);
+  const rows=ZONES.map(z=>{
+    const v=Pc[z.k];
+    return `<tr><td>${z.name} <span class="code">{${z.k}}</span></td><td>${Array.isArray(v)?`${fmtSec(v[0],1)}–${fmtSec(v[1],1)}`:fmtSec(v,1)}</td><td>${f(v,1000)}</td>${z.k==="E"?"<td>—</td><td>—</td>":`<td>${f(v,400)}</td><td>${f(v,800)}</td>`}</tr>`;
+  }).join("");
+  return `<div class="pace-scroll"><table class="paces num"><thead><tr><th>Zone · code</th><th>/mi</th><th>/km</th><th>400</th><th>800</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="hint" style="margin-top:10px">Type a code in any workout and it shows the pace for the current goal time. Add a distance for splits: <span class="code">{5K/400}</span> <span class="code">{HMP/1k}</span> <span class="code">{MP/1mi}</span>. Change the goal and every workout updates.</p>`;
+}
+function kind(t){
+  const s=(t||"").trim().toLowerCase();
+  if(!s)return"empty";
+  if(/race day/.test(s))return"race";
+  if(/^(rest|off)\b/.test(s))return"rest";
+  if(/^easy/.test(s)&&!/\d\s*x|@|tempo|\{|progression|escalation/.test(s))return"easy";
+  return"work";
+}
+function dayCell(p,wi,di,Pc){
+  const w=p.weeks[wi],d=addDays(mondayOf(toD(p.start)),wi*7+di),t=w.days[di]||"",k=kind(t);
+  return `<div class="day k-${k}${RO()?" ro":""}" data-w="${wi}" data-d="${di}" ${RO()?"":' draggable="true" tabindex="0"'} aria-label="${DAYS_LONG[di]} ${fmtD(d)}: ${esc(t?plainText(t,Pc):"empty")}${RO()?"":". Press Enter to edit."}">
+    <div class="dl"><span>${DAYS[di]}</span><span class="num">${d.getUTCDate()}</span></div>
+    <div class="dt">${t?resolveText(t,Pc):"—"}</div></div>`;
+}
+function weekHTML(p,wi,Pc,nowIdx){
+  const w=p.weeks[wi],a=addDays(mondayOf(toD(p.start)),wi*7),b=addDays(a,6),togo=p.weeks.length-1-wi;
+  return `<article class="week t-${esc(w.type||"Easy")}${wi===nowIdx?" now":""}" id="wk-${wi}">
+    <div class="wk-head">
+      <span class="wk-num num">W${wi+1}</span>
+      <span class="wk-dates">${fmtD(a)} – ${fmtD(b)}</span>
+      ${wi===nowIdx?'<span class="badge">This week</span>':""}
+      <span class="sp"></span>
+      <span class="togo">${togo===0?"Race week":togo+" to go"}</span>
+      <select data-wf="type" data-w="${wi}"${RO()?" disabled":""} aria-label="Week ${wi+1} type">${TYPES.map(t=>`<option${t===w.type?" selected":""}>${t}</option>`).join("")}</select>
+      <label class="wk-miles"><input type="number" min="0" max="250" step="1" inputmode="numeric" data-wf="miles" data-w="${wi}" id="mi-${wi}"${RO()?" disabled":""} value="${w.miles??""}" placeholder="—"> mi</label>
+    </div>
+    <div class="days">${DAYS.map((_,di)=>dayCell(p,wi,di,Pc)).join("")}</div>
+  </article>`;
+}
+function nowIndex(p){const i=Math.floor((todayD()-mondayOf(toD(p.start)))/DAY_MS/7);return i>=0&&i<p.weeks.length?i:-1}
+
+function render(){
+  S.remotePending=false;
+  const app=$("#app"),p=P();
+  if(!p){
+    app.innerHTML=`<div class="empty"><p class="eyebrow">Plan library</p><h1>No training plans yet</h1>
+      <p>Set your race date and goal time. You'll get a full block to start from: 3-week Easy, Hard and Medium cycles that build to peak mileage, then a 3-week taper. Paces come from your goal time.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"${RO()?" hidden":""}><button class="btn primary" data-act="new">Start a plan from the guideline</button><button class="btn" data-act="import">Import a plan</button></div></div>`;
+    return;
+  }
+  const Pc=paces(p),s=p.settings,nowIdx=nowIndex(p);
+  const dis=RO()?" disabled":"";
+  const startSnap=iso(mondayOf(toD(p.start)))!==p.start;
+  app.innerHTML=`
+  <section class="head">
+    <span class="eyebrow">${esc(p.athlete?p.athlete+" · ":"")}${p.dist<20?"Half marathon":"Marathon"} block</span>
+    <input class="title-in" id="f-name" data-f="name" value="${esc(p.name)}"${RO()?" readonly":""} aria-label="Plan name">
+    <div class="fields">
+      <div class="field"><label for="f-athlete">Athlete</label><input type="text" id="f-athlete" data-f="athlete"${dis} value="${esc(p.athlete||"")}" placeholder="Name"></div>
+      <div class="field"><label for="f-race">Race</label><input type="text" id="f-race" data-f="race"${dis} value="${esc(p.race||"")}" placeholder="e.g. Chicago Marathon"></div>
+      <div class="field"><label for="f-dist">Distance</label><select id="f-dist" data-f="dist"${dis}><option value="26.2188"${p.dist>20?" selected":""}>Marathon</option><option value="13.1094"${p.dist<20?" selected":""}>Half marathon</option></select></div>
+      <div class="field"><label for="f-start">Start date</label><input type="date" id="f-start" data-f="start"${dis} value="${p.start}">${startSnap?`<small>Weeks start Mon ${fmtD(mondayOf(toD(p.start)))}</small>`:""}</div>
+      <div class="field"><label for="f-raceDate">Race date</label><input type="date" id="f-raceDate" data-f="raceDate"${dis} value="${p.raceDate}"></div>
+      <div class="field"><label for="f-goal">Goal time</label><input type="text" id="f-goal" data-f="goal"${dis} value="${esc(p.goal)}" placeholder="h:mm:ss" inputmode="numeric"></div>
+    </div>
+    ${stats(p,Pc)}
+  </section>
+
+  <div class="row2">
+    <section class="card">
+      <div class="card-h"><h2>Weekly mileage</h2>
+        <div class="legend">${TYPES.map(t=>`<span><i style="background:var(--${t.toLowerCase()})"></i>${t}</span>`).join("")}</div></div>
+      <svg id="chart" role="img" aria-label="Weekly mileage chart"></svg>
+      <p class="hint">${RO()?"Click a bar to jump to that week.":"Drag the top of a bar to change that week's miles. Keep dragging sideways to reshape several weeks at once. Click a bar to jump to that week."}</p>
+    </section>
+    <section class="card">
+      <div class="card-h"><h2>Training paces</h2><span class="hint">from ${esc(p.goal)} goal</span></div>
+      ${paceTable(Pc)}
+    </section>
+  </div>
+
+  ${RO()?"":`<details class="card" style="margin-top:16px" id="gl"${S.glOpen?" open":""}>
+    <summary><h2>Rough guideline</h2><span class="hint">Rebuild mileage or workouts from your settings</span></summary>
+    <div class="gl-grid">
+      <div class="field"><label for="g-startMiles">First block (mi)</label><input type="number" id="g-startMiles" data-g="startMiles" value="${s.startMiles}" min="0"></div>
+      <div class="field"><label for="g-peakMiles">Peak week (mi)</label><input type="number" id="g-peakMiles" data-g="peakMiles" value="${s.peakMiles}" min="0"></div>
+      <div class="field"><label for="g-step">Weekly step (mi)</label><input type="number" id="g-step" data-g="step" value="${s.step}" min="0"></div>
+      <div class="field"><label for="g-qualityDay">Workout day</label><select id="g-qualityDay" data-g="qualityDay">${DAYS_LONG.map((d,i)=>`<option value="${i}"${i==s.qualityDay?" selected":""}>${d}</option>`).join("")}</select></div>
+      <div class="field"><label for="g-longDay">Long run day</label><select id="g-longDay" data-g="longDay">${DAYS_LONG.map((d,i)=>`<option value="${i}"${i==s.longDay?" selected":""}>${d}</option>`).join("")}</select></div>
+    </div>
+    <p class="hint" style="margin-top:10px">The build runs in 3-week cycles (Easy, Hard, Medium). Each cycle adds the weekly step, and the cycles climb to your peak. The taper drops to 85%, 72% and 64% of peak, and race week is about 58%. Workouts follow the Chicago 2026 progression, written in pace codes so they scale to any goal.</p>
+    <div class="gl-actions" id="gl-actions">${glActions()}</div>
+  </details>`}
+
+  <div class="sect-h"><h2>Week by week</h2><span class="hint">${RO()?"Read-only copy. Use Share & export to take a copy.":"Click a day to edit. Drag one day onto another to swap them."}</span></div>
+  <div class="weeks" id="weeks">${p.weeks.map((_,wi)=>weekHTML(p,wi,Pc,nowIdx)).join("")}</div>
+
+  <section class="share">${RO()?`
+    <div class="card"><h2>Share & export</h2>
+      <p>This is a read-only copy. Copy the plan code to import it into your own Block Builder, or get a spreadsheet file.</p>
+      <div class="btns"><button class="btn" data-act="copy-json">Copy plan code</button><button class="btn" data-act="csv">Spreadsheet (.csv)</button></div></div>`:`
+    <div class="card"><h2>Reuse for the next race</h2>
+      <p>Copy this block with a new race date and goal. Weeks stay lined up to race day and every pace code updates to the new goal.</p>
+      <div class="btns"><button class="btn primary" data-act="dup">Duplicate for next race</button></div></div>
+    <div class="card"><h2>Share & export</h2>
+      <p>${S.mode==="db"?"Plans save to this page's shared library. Anyone you share the page with who is signed in to Claude sees them.":"Plans are saved in this browser."} You can also copy a plan code to paste into another library, or get a spreadsheet file.</p>
+      <div class="btns"><button class="btn" data-act="copy-json">Copy plan code</button><button class="btn" data-act="csv">Spreadsheet (.csv)</button><button class="btn" data-act="json-file">Plan file (.json)</button></div></div>
+    <div class="card"><h2>Import or remove</h2>
+      <p>Paste a plan code that someone shared with you, or delete this plan from the library.</p>
+      <div class="btns" id="del-area"><button class="btn" data-act="import">Import plan code</button><button class="btn danger" data-act="del">Delete plan</button></div></div>
+    ${publicCard()}`}
+  </section>`;
+  drawChart();
+  if(nowIdx>=0&&!S.scrolled){S.scrolled=true}
+}
+function glActions(){
+  if(S.glConfirm){
+    const what={miles:"mileage and week types",workouts:"all workouts",both:"all mileage and workouts"}[S.glConfirm];
+    return `<span class="confirm">Replace ${what} for ${P().weeks.length} weeks? <button class="btn primary" data-act="gl-yes">Replace</button><button class="btn ghost" data-act="gl-no">Cancel</button></span>`;
+  }
+  return `<button class="btn" data-act="gl-miles">Rebuild mileage</button><button class="btn" data-act="gl-workouts">Rebuild workouts</button><button class="btn" data-act="gl-both">Rebuild both</button>`;
+}
+
+/* ---------- mileage chart ---------- */
+const CH={pl:34,pr:8,pt:18,pb:36};
+let chartMax=100;
+function drawChart(){
+  const svg=$("#chart"),p=P();if(!svg||!p)return;
+  const W=svg.clientWidth||700,H=240,n=p.weeks.length;
+  const ms=p.weeks.map(w=>+w.miles||0);
+  if(!CH.dragging)chartMax=Math.max(40,Math.ceil(Math.max(...ms)*1.15/20)*20);
+  const iw=W-CH.pl-CH.pr,ih=H-CH.pt-CH.pb,cw=iw/n,bw=Math.max(4,Math.min(46,cw*.72));
+  const y=v=>CH.pt+ih-(v/chartMax)*ih;
+  const tickStep=chartMax>120?40:20,nowIdx=nowIndex(p);
+  let g="";
+  for(let v=0;v<=chartMax;v+=tickStep)g+=`<line class="grid" x1="${CH.pl}" x2="${W-CH.pr}" y1="${y(v)}" y2="${y(v)}"/><text x="${CH.pl-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;
+  const every=cw<22?2:1;
+  p.weeks.forEach((w,i)=>{
+    const cx=CH.pl+cw*i+cw/2,v=+w.miles||0,top=y(v),col=`var(--${(w.type||"Easy").toLowerCase()})`;
+    const d=addDays(mondayOf(toD(p.start)),i*7);
+    g+=`<g class="wk${i===nowIdx?" now":""}" data-i="${i}">
+      <rect class="col" x="${CH.pl+cw*i}" y="${CH.pt}" width="${cw}" height="${ih+CH.pb}"/>
+      <rect class="bar" x="${cx-bw/2}" y="${top}" width="${bw}" height="${Math.max(0,CH.pt+ih-top)}" rx="2" fill="${col}"/>
+      ${v?`<rect class="handle" x="${cx-bw/2}" y="${top-1.5}" width="${bw}" height="3" rx="1.5"/>`:""}
+      ${v&&cw>=20?`<text class="ml" x="${cx}" y="${top-5}" text-anchor="middle">${v}</text>`:""}
+      ${i%every===0?`<text x="${cx}" y="${H-CH.pb+15}" text-anchor="middle">W${i+1}</text><text x="${cx}" y="${H-CH.pb+28}" text-anchor="middle" style="font-size:10px">${d.getUTCMonth()+1}/${d.getUTCDate()}</text>`:""}
+    </g>`;
+  });
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML=g;
+}
+function chartPos(e){
+  const svg=$("#chart"),r=svg.getBoundingClientRect(),p=P(),n=p.weeks.length;
+  const W=r.width,ih=240-CH.pt-CH.pb,cw=(W-CH.pl-CH.pr)/n;
+  const x=e.clientX-r.left,yy=(e.clientY-r.top)*(240/r.height);
+  const i=Math.max(0,Math.min(n-1,Math.floor((x-CH.pl)/cw)));
+  const v=Math.max(0,Math.min(chartMax,Math.round((CH.pt+ih-yy)/ih*chartMax)));
+  const top=CH.pt+ih-((+p.weeks[i].miles||0)/chartMax)*ih;
+  return{i,v,nearTop:Math.abs(yy-top)<16||yy>top};
+}
+function setMiles(i,v){
+  const p=P();if(!p.weeks[i]||p.weeks[i].miles===v)return;
+  p.weeks[i].miles=v;
+  const inp=$("#mi-"+i);if(inp)inp.value=v;
+}
+document.addEventListener("pointerdown",e=>{
+  const svg=e.target.closest&&e.target.closest("#chart");if(!svg||!P())return;
+  const pos=chartPos(e);
+  CH.down={i:pos.i,x:e.clientX,y:e.clientY};
+  if(pos.nearTop&&!RO()){CH.dragging=true;svg.setPointerCapture(e.pointerId);setMiles(pos.i,pos.v);drawChart();e.preventDefault()}
+});
+document.addEventListener("pointermove",e=>{
+  if(!CH.dragging)return;
+  const pos=chartPos(e);setMiles(pos.i,pos.v);drawChart();
+  const g=$(`#chart g.wk[data-i="${pos.i}"]`);if(g)g.classList.add("drag");
+});
+document.addEventListener("pointerup",e=>{
+  if(!CH.down)return;
+  const d=CH.down;CH.down=null;
+  if(CH.dragging){CH.dragging=false;touch(P());refreshHead();drawChart();return}
+  if(Math.abs(e.clientX-d.x)<5&&Math.abs(e.clientY-d.y)<5){const el=$("#wk-"+d.i);if(el)el.scrollIntoView({behavior:"smooth",block:"center"})}
+});
+function refreshHead(){const p=P(),st=$(".stats");if(st)st.outerHTML=stats(p,paces(p))}
+let rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(drawChart,80)});
+
+/* ---------- day editing ---------- */
+function openEditor(cell){
+  if(RO())return;
+  if(S.editing)commitEditor();
+  const p=P(),wi=+cell.dataset.w,di=+cell.dataset.d;
+  S.editing={wi,di,cell};
+  cell.draggable=false;
+  const dt=cell.querySelector(".dt");
+  const ta=document.createElement("textarea");
+  ta.value=p.weeks[wi].days[di]||"";ta.id=`ed-${wi}-${di}`;ta.setAttribute("aria-label","Workout");
+  dt.replaceWith(ta);
+  const fit=()=>{ta.style.height="auto";ta.style.height=Math.max(70,ta.scrollHeight+2)+"px"};
+  ta.addEventListener("input",fit);fit();
+  ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);
+  ta.addEventListener("keydown",ev=>{
+    if(ev.key==="Escape"){ev.preventDefault();S.editing.cancel=true;ta.blur()}
+    if(ev.key==="Enter"&&(ev.metaKey||ev.ctrlKey)){ev.preventDefault();ta.blur()}
+  });
+  ta.addEventListener("blur",()=>setTimeout(()=>{if(S.editing&&S.editing.cell===cell&&document.activeElement!==ta&&!S.trayDown)commitEditor()},0));
+  showTray();
+}
+function commitEditor(){
+  const ed=S.editing;if(!ed)return;S.editing=null;hideTray();
+  const p=P(),ta=ed.cell.querySelector("textarea");
+  if(p&&ta&&!ed.cancel){
+    const v=ta.value.replace(/\s+$/,"");
+    if(v!==(p.weeks[ed.wi].days[ed.di]||"")){p.weeks[ed.wi].days[ed.di]=v;touch(p)}
+  }
+  if(S.remotePending){render();return}
+  if(p&&ed.cell.isConnected){const tmp=document.createElement("div");tmp.innerHTML=dayCell(p,ed.wi,ed.di,paces(p));ed.cell.replaceWith(tmp.firstElementChild)}
+}
+function showTray(){
+  const p=P(),Pc=paces(p);
+  const toks=[["{E}","easy"],["{MP}","marathon"],["{HMP}","half"],["{T}","threshold"],["{10K}",""],["{5K}",""],["{MILE}",""],["{5K/400}",""],["{10K/800}",""],["{HMP/1k}",""],["{MILE/200}",""],["{GOAL}",""]];
+  $("#layer").innerHTML=`<div class="tray" id="tray"><div class="tray-in"><span class="lbl">Insert pace</span>${toks.map(([t,l])=>`<button class="tok" data-tok="${t}" type="button">${t}<b>${Pc?plainText(t,Pc).replace("/mi",""):l}</b></button>`).join("")}<span class="lbl" style="margin-left:auto">Esc cancels · ⌘/Ctrl+Enter saves</span></div></div>`;
+}
+function hideTray(){const t=$("#tray");if(t)t.remove()}
+document.addEventListener("mousedown",e=>{
+  const tok=e.target.closest&&e.target.closest(".tok");
+  if(tok){e.preventDefault();const ta=S.editing&&S.editing.cell.querySelector("textarea");if(!ta)return;
+    const a=ta.selectionStart,b=ta.selectionEnd,t=tok.dataset.tok;
+    ta.value=ta.value.slice(0,a)+t+ta.value.slice(b);ta.setSelectionRange(a+t.length,a+t.length);ta.dispatchEvent(new Event("input"))}
+});
+document.addEventListener("touchstart",e=>{if(e.target.closest&&e.target.closest(".tray"))S.trayDown=true},{passive:true});
+document.addEventListener("touchend",e=>{
+  const tok=e.target.closest&&e.target.closest(".tok");
+  if(tok&&S.editing){e.preventDefault();const ta=S.editing.cell.querySelector("textarea");const a=ta.selectionStart,b=ta.selectionEnd,t=tok.dataset.tok;ta.value=ta.value.slice(0,a)+t+ta.value.slice(b);ta.focus();ta.setSelectionRange(a+t.length,a+t.length);ta.dispatchEvent(new Event("input"))}
+  setTimeout(()=>S.trayDown=false,50);
+});
+
+/* drag to swap days */
+let dragFrom=null;
+document.addEventListener("dragstart",e=>{const c=e.target.closest&&e.target.closest(".day");if(!c||S.editing||RO())return;dragFrom=c;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain","day")}catch(x){}});
+document.addEventListener("dragover",e=>{const c=e.target.closest&&e.target.closest(".day");if(c&&dragFrom){e.preventDefault();document.querySelectorAll(".day.drop").forEach(x=>x!==c&&x.classList.remove("drop"));c.classList.add("drop")}});
+document.addEventListener("dragend",()=>{dragFrom=null;document.querySelectorAll(".day.drop").forEach(x=>x.classList.remove("drop"))});
+document.addEventListener("drop",e=>{
+  const c=e.target.closest&&e.target.closest(".day");if(!c||!dragFrom)return;e.preventDefault();
+  const p=P(),a=[+dragFrom.dataset.w,+dragFrom.dataset.d],b=[+c.dataset.w,+c.dataset.d];dragFrom=null;
+  if(a[0]===b[0]&&a[1]===b[1])return;
+  const t=p.weeks[a[0]].days[a[1]];p.weeks[a[0]].days[a[1]]=p.weeks[b[0]].days[b[1]];p.weeks[b[0]].days[b[1]]=t;
+  touch(p);
+  const Pc=paces(p);
+  for(const [w,d] of [a,b]){const el=$(`.day[data-w="${w}"][data-d="${d}"]`);if(el){const tmp=document.createElement("div");tmp.innerHTML=dayCell(p,w,d,Pc);el.replaceWith(tmp.firstElementChild)}}
+});
+
+/* ---------- field changes ---------- */
+document.addEventListener("click",e=>{
+  const cell=e.target.closest&&e.target.closest(".day");
+  if(cell&&!e.target.closest("textarea")&&!(S.editing&&S.editing.cell===cell)){openEditor(cell);return}
+  const b=e.target.closest&&e.target.closest("[data-act]");if(b)act(b.dataset.act,b);
+});
+document.addEventListener("keydown",e=>{
+  const cell=e.target.classList&&e.target.classList.contains("day")?e.target:null;
+  if(cell&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openEditor(cell)}
+});
+document.addEventListener("toggle",e=>{if(e.target.id==="gl")S.glOpen=e.target.open},true);
+document.addEventListener("change",e=>{
+  const t=e.target,p=P();
+  if(t.id==="planSel"){if(S.editing)commitEditor();S.cur=t.value;lsSet("blockbuilder.cur",t.value);S.glConfirm=null;render();window.scrollTo(0,0);return}
+  if(!p||RO())return;
+  if(t.dataset.f){
+    const f=t.dataset.f;let v=t.value;
+    if(f==="dist")v=+v;
+    if((f==="start"||f==="raceDate")&&!v){t.value=p[f];return}
+    const before=p[f];p[f]=v;
+    if(f==="start"||f==="raceDate"){
+      if(toD(p.raceDate)<toD(p.start)){p[f]=before;t.value=before;toast("Race date must be after the start date");return}
+      const msg=resize(p);
+      if(f==="raceDate"){const last=p.weeks[p.weeks.length-1];if(last&&last.days.some(x=>/race day/i.test(x))){last.days=last.days.map(x=>/race day/i.test(x)?"Easy":x);last.days[dow(toD(p.raceDate))]="RACE DAY\nGoal {GOAL} · {MP}"}}
+      if(msg)toast(msg);
+    }
+    touch(p);
+    if(f==="name"||f==="athlete"||f==="race"){renderSelect();if(f!=="name"){const eb=$(".head .eyebrow");if(eb)eb.textContent=`${p.athlete?p.athlete+" · ":""}${p.dist<20?"Half marathon":"Marathon"} block`}}
+    else render();
+    renderSelect();return;
+  }
+  if(t.dataset.wf){
+    const w=p.weeks[+t.dataset.w];
+    if(t.dataset.wf==="miles"){w.miles=t.value===""?null:Math.max(0,Math.round(+t.value));refreshHead()}
+    else{w.type=t.value;const art=$("#wk-"+t.dataset.w);art.className=art.className.replace(/t-\w+/,"t-"+t.value)}
+    touch(p);drawChart();return;
+  }
+  if(t.dataset.g){const k=t.dataset.g;p.settings[k]=+t.value;touch(p);return}
+});
+
+/* ---------- actions ---------- */
+function toast(msg){const el=document.createElement("div");el.className="toast";el.setAttribute("role","status");el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),2600)}
+async function copyText(text,okMsg){
+  try{await navigator.clipboard.writeText(text);toast(okMsg);return true}catch(e){return false}
+}
+function exportable(p){const o=stripId(p);o.format="block-builder/1";return o}
+function csv(p){
+  const Pc=paces(p),q=s=>`"${String(s??"").replace(/"/g,'""')}"`;
+  const rows=[["Week","Week of","Type","Miles",...DAYS_LONG]];
+  p.weeks.forEach((w,i)=>rows.push([i+1,iso(addDays(mondayOf(toD(p.start)),i*7)),w.type,w.miles??"",...w.days.map(d=>plainText(d,Pc))]));
+  return rows.map(r=>r.map(q).join(",")).join("\n");
+}
+const slug=s=>String(s||"plan").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"plan";
+async function offerFile(filename,data,fallbackMsg){
+  let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null}catch(e){}
+  if(dl){try{await dl.save({filename,data});toast("Saved "+filename);return}catch(e){if(e&&e.code==="declined")return}}
+  if(await copyText(data,fallbackMsg))return;
+  modal(`<h3>Copy ${esc(filename)}</h3><p class="hint">Downloads aren't available here. Select all and copy this text instead.</p><textarea class="io" id="io-copy" readonly style="min-height:220px">${esc(data)}</textarea><div class="acts"><button class="btn primary" data-act="close">Done</button></div>`);
+  const ta=$("#io-copy");ta.focus();ta.select();
+}
+function modal(html){$("#layer").innerHTML=`<div class="scrim" id="scrim"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;const f=$("#scrim input,#scrim textarea");if(f)f.focus()}
+function closeModal(){const s=$("#scrim");if(s)s.remove()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#scrim"))closeModal()});
+document.addEventListener("mousedown",e=>{if(e.target.id==="scrim")closeModal()});
+
+function planForm(title,o,submit){
+  modal(`<h3>${title}</h3>
+    <div class="field"><label for="m-name">Plan name</label><input type="text" id="m-name" value="${esc(o.name)}"></div>
+    <div class="two"><div class="field"><label for="m-athlete">Athlete</label><input type="text" id="m-athlete" value="${esc(o.athlete||"")}"></div>
+    <div class="field"><label for="m-race">Race</label><input type="text" id="m-race" value="${esc(o.race||"")}"></div></div>
+    <div class="two"><div class="field"><label for="m-raceDate">Race date</label><input type="date" id="m-raceDate" value="${o.raceDate}"></div>
+    <div class="field"><label for="m-goal">Goal time</label><input type="text" id="m-goal" value="${esc(o.goal)}" placeholder="h:mm:ss"></div></div>
+    <div class="two"><div class="field"><label for="m-start">Start date</label><input type="date" id="m-start" value="${o.start}"><small>${o.startHint||""}</small></div>
+    <div class="field"><label for="m-dist">Distance</label><select id="m-dist"><option value="26.2188"${o.dist>20?" selected":""}>Marathon</option><option value="13.1094"${o.dist<20?" selected":""}>Half marathon</option></select></div></div>
+    ${o.withMiles?`<div class="two"><div class="field"><label for="m-startMiles">First block (mi/week)</label><input type="number" id="m-startMiles" value="${o.settings.startMiles}"></div><div class="field"><label for="m-peakMiles">Peak week (mi)</label><input type="number" id="m-peakMiles" value="${o.settings.peakMiles}"></div></div>`:""}
+    <p class="hint" id="m-err"></p>
+    <div class="acts"><button class="btn ghost" data-act="close">Cancel</button><button class="btn primary" data-act="modal-ok">${o.ok}</button></div>`);
+  S.modalSubmit=()=>{
+    const v=id=>$("#m-"+id).value,r={name:v("name").trim()||"Untitled plan",athlete:v("athlete").trim(),race:v("race").trim(),raceDate:v("raceDate"),goal:v("goal").trim(),start:v("start"),dist:+v("dist")};
+    if(o.withMiles)r.settings={startMiles:+v("startMiles")||40,peakMiles:+v("peakMiles")||70};
+    const err=!r.raceDate||!r.start?"Choose a start date and a race date.":toD(r.raceDate)<=toD(r.start)?"The race date must be after the start date.":!parseTime(r.goal,r.dist)?"Enter the goal as h:mm:ss, for example 2:45:00.":"";
+    if(err){$("#m-err").textContent=err;return}
+    closeModal();submit(r);
+  };
+  // keep start date following race date (same block length) until the user edits start
+  const rd=$("#m-raceDate"),sd=$("#m-start");let touched=false;sd.addEventListener("input",()=>touched=true);
+  rd.addEventListener("change",()=>{if(!touched&&rd.value)sd.value=iso(addDays(mondayOf(toD(rd.value)),-7*(o.len-1)))});
+}
+
+function act(a,btn){
+  const p=P();
+  switch(a){
+    case"new":{
+      const race=iso(addDays(todayD(),7*20)),len=18;
+      planForm("New plan",{name:"",athlete:p?p.athlete:"",race:"",raceDate:race,goal:p?p.goal:"2:45:00",dist:26.2188,start:iso(addDays(mondayOf(toD(race)),-7*(len-1))),len,startHint:"Set to 18 weeks before race day. You can change it.",withMiles:true,settings:{startMiles:p?p.settings.startMiles:50,peakMiles:p?p.settings.peakMiles:80},ok:"Build plan"},
+        r=>{const np=newPlan(Object.assign(r,{settings:Object.assign({},p?p.settings:{},r.settings)}));addPlan(np);window.scrollTo(0,0);toast("Plan built from the guideline")});
+      break;}
+    case"dup":{
+      if(!p)return;const len=p.weeks.length,race=iso(addDays(toD(p.raceDate),7*26));
+      planForm("Duplicate for next race",{name:p.name.replace(/\d{4}/,m=>String(+m+1))+(/\d{4}/.test(p.name)?"":" (copy)"),athlete:p.athlete,race:p.race,raceDate:race,goal:p.goal,dist:p.dist,start:iso(addDays(mondayOf(toD(race)),-7*(len-1))),len,startHint:`Keeps the same ${len}-week length. Shorter or longer adds or removes weeks at the start.`,ok:"Create copy"},
+        r=>{
+          const np=Object.assign(clone(stripId(p)),r,{settings:clone(p.settings)});
+          const oldRace=dow(toD(p.raceDate));
+          resize(np);
+          const last=np.weeks[np.weeks.length-1];
+          if(dow(toD(np.raceDate))!==oldRace&&last.days.some(x=>/race day/i.test(x)))last.days=raceWeekDays(np);
+          addPlan(np);window.scrollTo(0,0);toast("Copied. Paces now match the "+np.goal+" goal");
+        });
+      break;}
+    case"publish-snap":publishSnapshot(btn);break;
+    case"modal-ok":S.modalSubmit&&S.modalSubmit();break;
+    case"close":closeModal();break;
+    case"gl-miles":case"gl-workouts":case"gl-both":S.glConfirm=a.slice(3);$("#gl-actions").innerHTML=glActions();break;
+    case"gl-no":S.glConfirm=null;$("#gl-actions").innerHTML=glActions();break;
+    case"gl-yes":{const m=S.glConfirm;S.glConfirm=null;generate(p,{miles:m!=="workouts",workouts:m!=="miles"});touch(p);render();toast("Rebuilt from the guideline");break;}
+    case"copy-json":{
+      const code=JSON.stringify(exportable(p));
+      copyText(code,"Plan code copied. Paste it into Import on another library.").then(ok=>{if(!ok){modal(`<h3>Plan code</h3><p class="hint">Copy this text and send it. The other person pastes it into Import plan code.</p><textarea class="io" id="io-copy" readonly style="min-height:220px">${esc(code)}</textarea><div class="acts"><button class="btn primary" data-act="close">Done</button></div>`);$("#io-copy").select()}});
+      break;}
+    case"csv":offerFile(slug(p.name)+".csv",csv(p),"Spreadsheet rows copied. Paste them into Google Sheets.");break;
+    case"json-file":offerFile(slug(p.name)+".json",JSON.stringify(exportable(p),null,1),"Plan file text copied");break;
+    case"import":
+      modal(`<h3>Import plan code</h3><p class="hint">Paste a plan code or the contents of a .json plan file.</p><textarea class="io" id="io-in" placeholder='{"name": …}'></textarea><p class="hint" id="m-err"></p><div class="acts"><button class="btn ghost" data-act="close">Cancel</button><button class="btn primary" data-act="import-ok">Import</button></div>`);
+      break;
+    case"import-ok":{
+      let o;try{o=JSON.parse($("#io-in").value)}catch(e){$("#m-err").textContent="That isn't a plan code. Copy the whole code, including the { and } at each end.";return}
+      if(!o||!Array.isArray(o.weeks)||!o.start||!o.raceDate){$("#m-err").textContent="This code is missing weeks or dates. Copy it again from Share & export.";return}
+      delete o.format;delete o.id;
+      o.settings=Object.assign({startMiles:50,peakMiles:80,step:6,qualityDay:2,longDay:5},o.settings||{});
+      o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||""))}));
+      o.dist=+o.dist||26.2188;o.goal=String(o.goal||"3:00:00");o.name=String(o.name||"Imported plan");
+      resize(o);closeModal();addPlan(o);window.scrollTo(0,0);toast("Imported "+o.name);break;}
+    case"del":$("#del-area").innerHTML=`<span class="confirm">Delete “${esc(p.name)}” for everyone? <button class="btn danger" data-act="del-yes">Delete</button><button class="btn ghost" data-act="del-no">Keep</button></span>`;break;
+    case"del-no":render();break;
+    case"del-yes":{const id=S.cur;S.cur=null;removePlan(id).then(()=>afterLoad(true));break;}
+  }
+}
+
+initStore();
+})();
+</script>
+</body></html>
