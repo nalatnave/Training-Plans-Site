@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <!-- Shared plans: your Supabase settings go on the next line. The app's Team page shows the exact line to paste. -->
-<script>window.BLOCK_BUILDER_SUPABASE={url:"https://rxwdghmkhxpwekfbavxa.supabase.co",anonKey:"sb_publishable_KhmFJFA8Tmdk3gjtjvjmTw_kHV5UAWT"};</script>
+<script>window.BLOCK_BUILDER_SUPABASE={url:"",anonKey:""};</script>
 <title>Marathon Block Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,6 +21,7 @@
   --hard:#9C2F45; --hard-soft:#F4E0E4; --taper:#6F7F92; --taper-soft:#E7ECF1; --race:#132030; --race-soft:#DCE3EA;
   --focus:#2F6FD6; --strava:#E34402;
   --a0:#3767D0; --a1:#B0437A; --a2:#2D8A57; --a3:#BD7410; --a4:#6A52C4; --a5:#16818F;
+  --go:#1E8A47; --go-soft:#DCF2E3;
   --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -32,14 +33,16 @@
   --easy:#5CC2B2; --easy-soft:#173330; --medium:#E3AA45; --medium-soft:#362B16;
   --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
   --focus:#7AA7F0; --strava:#FF7A3D;
-  --a0:#7EA2F2; --a1:#E58AB7; --a2:#6ACB92; --a3:#EDB25A; --a4:#A994F0; --a5:#5CC7D3; color-scheme:dark}}
+  --a0:#7EA2F2; --a1:#E58AB7; --a2:#6ACB92; --a3:#EDB25A; --a4:#A994F0; --a5:#5CC7D3;
+  --go:#5BD68D; --go-soft:#173A26; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#0F151C; --surface:#17202A; --sunk:#1C2631; --ink:#E5EBF1; --muted:#93A1B0; --line:#2A3644;
   --accent:#EE6A4C; --accent-ink:#1A0E0A; --accent-soft:#3A221D;
   --easy:#5CC2B2; --easy-soft:#173330; --medium:#E3AA45; --medium-soft:#362B16;
   --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
   --focus:#7AA7F0; --strava:#FF7A3D;
-  --a0:#7EA2F2; --a1:#E58AB7; --a2:#6ACB92; --a3:#EDB25A; --a4:#A994F0; --a5:#5CC7D3; color-scheme:dark}
+  --a0:#7EA2F2; --a1:#E58AB7; --a2:#6ACB92; --a3:#EDB25A; --a4:#A994F0; --a5:#5CC7D3;
+  --go:#5BD68D; --go-soft:#173A26; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -205,6 +208,12 @@ table.tw{border-collapse:collapse;width:100%;min-width:940px;table-layout:fixed}
 .tw td.k-race .dt{font-family:var(--f-display);font-weight:700;font-size:16px;text-transform:uppercase}
 .tw td.none{background:var(--sunk);cursor:default;color:var(--muted);font-size:12px}
 .tw td.shared{box-shadow:inset 0 0 0 2px var(--accent)}
+.tw td.together,.tw td.together:hover{background:var(--go-soft);box-shadow:inset 0 0 0 2px var(--go)}
+.ovl .tag.go{color:var(--go)}
+.tg{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--go);background:var(--go-soft);border:1px solid var(--go);border-radius:3px;padding:0 5px;margin-top:5px;margin-right:4px;vertical-align:middle}
+.day.with{box-shadow:inset 0 -3px 0 var(--go)}
+.legend2{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend2 i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:5px}
 .sch{font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
 .sch b{color:var(--ink);font-weight:600}
 .pt{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--easy);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-top:5px;margin-right:4px;vertical-align:middle}
@@ -761,7 +770,7 @@ function setCurrent(id){
   S.draft=S.cur?clone(S.plans[S.cur]):null;
   if(S.cur&&!RO()){
     try{const d=JSON.parse(lsGet("blockbuilder.draft")||"null");
-      if(d&&d.id===S.cur&&d.base===S.plans[S.cur].updatedAt){S.draft=Object.assign(d.plan,{id:S.cur});S.unsaved=true}}catch(e){}
+      if(d&&d.id===S.cur&&(d.base===S.plans[S.cur].updatedAt||d.base===null)){S.draft=Object.assign(d.plan,{id:S.cur});S.unsaved=true}}catch(e){}
   }
   renderTop();if(S.unsaved)updateSaveUI();
 }
@@ -782,7 +791,8 @@ async function flush(id){
     else saveLocal();
     if(!S.unsaved)status(savedMsg());
   }catch(e){
-    status(e&&e.code==="not_granted"?"View only: you can't save changes to this library":"Not saved: "+(e&&e.message||"try again"),true);
+    if(S.mode==="cloud")await cloudWriteFailed(e,id);
+    else status(e&&e.code==="not_granted"?"View only: you can't save changes to this library":"Not saved: "+(e&&e.message||"try again"),true);
   }
   S.writing[id]=false;
   if(S.again[id]){S.again[id]=false;return flush(id)}
@@ -873,10 +883,10 @@ function dayCell(p,wi,di,Pc,v="w"){
   const lbl=v==="m"?`<span class="num">${d.getUTCDate()}</span>${isToday?'<span class="tdy">Today</span>':""}`
     :v==="d"?`<span>${DAYS_LONG[di]}</span>${isToday?'<span class="tdy">Today</span>':""}`
     :`<span>${DAYS[di]}</span><span class="num">${d.getUTCDate()}</span>`;
-  const am=athleteMode();
-  return `<div class="day k-${k}${RO()&&!am?" ro":""}${isToday?" today":""}" data-w="${wi}" data-d="${di}" data-v="${v}"${RO()?(am?' tabindex="0"':""):(v==="d"?"":' draggable="true"')+' tabindex="0"'} aria-label="${DAYS_LONG[di]} ${fmtD(d)}: ${esc(t?plainText(t,Pc):"empty")}${am?". Press Enter to request a change.":RO()?"":". Press Enter to edit."}">
+  const am=athleteMode(),partners=partnersOn(p,wi,di);
+  return `<div class="day k-${k}${RO()&&!am?" ro":""}${isToday?" today":""}${partners.length?" with":""}" data-w="${wi}" data-d="${di}" data-v="${v}"${RO()?(am?' tabindex="0"':""):(v==="d"?"":' draggable="true"')+' tabindex="0"'} aria-label="${DAYS_LONG[di]} ${fmtD(d)}: ${esc(t?plainText(t,Pc):"empty")}${am?". Press Enter to request a change.":RO()?"":". Press Enter to edit."}">
     <div class="dl">${lbl}</div>
-    <div class="dt">${t?resolveText(t,Pc):"—"}</div>${schedHTML(schedOf(w,di))}${ptDaysFor(p,wi).includes(di)?`<span class="pt" title="${esc(ptTitle(p))}">PT</span>`:""}${requestOn(p.id,wi,di)?`<span class="rqtag" title="Open change request">Request</span>`:""}${linkOf(w,di)?`<a class="sv" href="${esc(linkOf(w,di))}" target="_blank" rel="noopener" title="Open this run on Strava">${v==="m"?"Strava ↗":"View on Strava ↗"}</a>`:""}</div>`;
+    <div class="dt">${t?resolveText(t,Pc):"—"}</div>${schedHTML(schedOf(w,di))}${ptDaysFor(p,wi).includes(di)?`<span class="pt" title="${esc(ptTitle(p))}">${v==="m"?"PT":esc(ptTitle(p).replace("PT: ","PT · "))}</span>`:""}${partners.length?`<span class="tg" title="${esc(partners.map(x=>`${x.a.name} at ${fmtTime(x.t)}${x.loc?", "+x.loc:""}`).join("; "))}">With ${esc(partners.map(x=>x.a.name.split(" ")[0]).join(", "))}</span>`:""}${requestOn(p.id,wi,di)?`<span class="rqtag" title="Open change request">Request</span>`:""}${linkOf(w,di)?`<a class="sv" href="${esc(linkOf(w,di))}" target="_blank" rel="noopener" title="Open this run on Strava">${v==="m"?"Strava ↗":"View on Strava ↗"}</a>`:""}</div>`;
 }
 const typeSelect=(wi,w)=>`<select data-wf="type" data-w="${wi}"${RO()?" disabled":""} aria-label="Week ${wi+1} type" title="Changing the type swaps in workbook workouts of that type">${TYPES.map(t=>`<option${t===w.type?" selected":""}>${t}</option>`).join("")}</select>`;
 function weekHTML(p,wi,Pc,nowIdx){
@@ -1398,11 +1408,15 @@ function act(a,btn){
       if(i>=0)at.concerns.splice(i,1);else at.concerns.push({area:k,sev:"watch",note:""});
       saveAthlete(at);renderAthlete();break;}
     case"pt-day":{
-      const at=S.athletes[S.athSel],d=+btn.dataset.d;if(!at||RO())return;
+      const at=S.athletes[S.athSel],d=+btn.dataset.d;if(!at||(RO()&&!athleteMode()))return;
       const cur=at.ptDays?at.ptDays.slice():(S.ptAuto||[]).slice();
       const i=cur.indexOf(d);if(i>=0)cur.splice(i,1);else cur.push(d);
-      at.ptDays=cur.sort((x,y)=>x-y);saveAthlete(at);renderAthlete();break;}
-    case"pt-auto":{const at=S.athletes[S.athSel];if(!at)return;at.ptDays=null;saveAthlete(at);renderAthlete();break;}
+      cur.sort((x,y)=>x-y);
+      if(athleteMode()){athleteSetPtDays(cur);break}
+      at.ptDays=cur;saveAthlete(at);renderAthlete();break;}
+    case"pt-auto":{const at=S.athletes[S.athSel];if(!at)return;
+      if(athleteMode()){athleteSetPtDays(null);break}
+      if(RO())return;at.ptDays=null;saveAthlete(at);renderAthlete();break;}
     case"ath-del":$("#ath-del-area").innerHTML=`<span class="confirm">Remove ${esc(S.athletes[S.athSel].name)}? <button class="btn danger" data-act="ath-del-yes">Remove</button><button class="btn ghost" data-act="ath-del-no">Keep</button></span>`;break;
     case"ath-del-no":renderAthlete();break;
     case"ath-del-yes":removeAthlete(S.athSel);S.page="team";render();break;
@@ -1474,7 +1488,7 @@ async function saveAthlete(a){
     else if(S.mode==="cloud")await cloudSaveAthlete(a);
     else saveLocalAthletes();
     if(!S.unsaved)status(savedMsg());
-  }catch(e){status("Not saved: "+(e&&e.message||"try again"),true)}
+  }catch(e){if(S.mode==="cloud")await cloudWriteFailed(e);else status("Not saved: "+(e&&e.message||"try again"),true)}
   S.athPending.delete(a.id);
 }
 async function removeAthlete(id){
@@ -1596,23 +1610,53 @@ function teamRows(wk){
     return{p:r.p,wi:r.wi,di:r.di,t,k:kind(t),sch:schedOf(w,r.di),link:linkOf(w,r.di),pt:ptDaysFor(r.p,r.wi).includes(r.di),w};
   })}));
 }
-// Same place on the same day = shared session; several workouts on a day without one = chance to pair up.
+// Overlap on one day, strongest first:
+//   same time (start times within TOGETHER_MIN, any place) = could work out together (green);
+//   same place at different times = shared venue; several workouts with neither = could pair up.
+const TOGETHER_MIN=30;
+const mins=t=>{const [h,m]=String(t||"").split(":").map(Number);return h*60+m};
+const runs=k=>k!=="rest"&&k!=="empty";
+const bestSpelling=list=>list.map(x=>x.trim()).sort((x,y)=>(y!==y.toLowerCase())-(x!==x.toLowerCase()))[0];
 function overlaps(rows){
-  const out=[],sharedCells=new Set();
+  const out=[],sharedCells=new Set(),togetherCells=new Set();
   for(let di=0;di<7;di++){
-    const groups={};
-    rows.forEach(r=>{const c=r.days[di];if(c&&c.sch.loc&&c.k!=="rest"){const k=c.sch.loc.trim().toLowerCase();(groups[k]=groups[k]||[]).push({a:r.a,c})}});
-    const inShared=new Set();
-    for(const k in groups)if(groups[k].length>1){
-      // show the best-capitalised spelling of the place
-      const loc=groups[k].map(m=>m.c.sch.loc.trim()).sort((x,y)=>(y!==y.toLowerCase())-(x!==x.toLowerCase()))[0];
-      out.push({di,kind:"place",loc,members:groups[k]});
-      groups[k].forEach(m=>{sharedCells.add(m.a.id+":"+di);inShared.add(m.a.id)});
+    const ents=rows.map(r=>({a:r.a,c:r.days[di]})).filter(m=>m.c&&runs(m.c.k));
+    const together=new Set();
+    const timed=ents.filter(m=>m.c.sch.t).sort((x,y)=>mins(x.c.sch.t)-mins(y.c.sch.t));
+    let grp=[];
+    const close=()=>{
+      if(grp.length>1){
+        const locs=grp.map(m=>m.c.sch.loc.trim()).filter(Boolean),same=locs.length===grp.length&&new Set(locs.map(x=>x.toLowerCase())).size===1;
+        out.push({di,kind:"time",members:grp,samePlace:same,loc:same?bestSpelling(locs):""});
+        grp.forEach(m=>{togetherCells.add(m.a.id+":"+di);together.add(m.a.id)});
+      }
+      grp=[];
+    };
+    for(const m of timed){if(grp.length&&mins(m.c.sch.t)-mins(grp[0].c.sch.t)>TOGETHER_MIN)close();grp.push(m)}
+    close();
+    const groups={},inPlace=new Set();
+    ents.forEach(m=>{if(m.c.sch.loc){const k=m.c.sch.loc.trim().toLowerCase();(groups[k]=groups[k]||[]).push(m)}});
+    for(const k in groups){
+      const g=groups[k];if(g.length<2||g.every(m=>together.has(m.a.id)))continue;
+      out.push({di,kind:"place",loc:bestSpelling(g.map(m=>m.c.sch.loc)),members:g});
+      g.forEach(m=>{sharedCells.add(m.a.id+":"+di);inPlace.add(m.a.id)});
     }
-    const work=rows.filter(r=>r.days[di]&&r.days[di].k==="work"&&!inShared.has(r.a.id));
-    if(work.length>1)out.push({di,kind:"work",members:work.map(r=>({a:r.a,c:r.days[di]}))});
+    const work=ents.filter(m=>m.c.k==="work"&&!together.has(m.a.id)&&!inPlace.has(m.a.id));
+    if(work.length>1)out.push({di,kind:"work",members:work});
   }
-  return{list:out,sharedCells};
+  return{list:out,sharedCells,togetherCells};
+}
+// Other athletes whose session on this date starts within TOGETHER_MIN of this one.
+function partnersOn(p,wi,di){
+  const sc=schedOf(p.weeks[wi],di);if(!sc.t||!runs(kind(p.weeks[wi].days[di])))return[];
+  const d=addDays(mondayOf(toD(p.start)),wi*7+di),out=[];
+  for(const a of sortedAthletes()){
+    if(a.id===p.athleteId)continue;
+    const r=planOn(a.id,d);if(!r)continue;
+    const w=r.p.weeks[r.wi],o=schedOf(w,r.di);
+    if(o.t&&runs(kind(w.days[r.di]))&&Math.abs(mins(o.t)-mins(sc.t))<=TOGETHER_MIN)out.push({a,t:o.t,loc:o.loc});
+  }
+  return out;
 }
 function firstLine(c){return plainText(c.t,paces(c.p)).split("\n")[0]}
 function renderTeam(){
@@ -1641,15 +1685,16 @@ function renderTeam(){
     const f=r.days.find(Boolean);
     return `<tr><td class="ath" style="--ac:var(--a${r.a.color%6})"><div class="aname"><span class="adot"></span><button data-act="open-athlete" data-id="${r.a.id}">${esc(r.a.name)}</button></div>
       ${f?`<div class="ameta t-${esc(f.w.type)}"><span class="tpill">${esc(f.w.type)}</span> ${f.w.miles??"—"} mi</div><div class="ameta">${esc(f.p.name)}</div>`:`<div class="ameta">No plan this week</div>`}</td>
-      ${r.days.map((c,di)=>!c?`<td class="none">—</td>`:`<td class="k-${c.k}${ov.sharedCells.has(r.a.id+":"+di)?" shared":""}" data-act="open-day" data-plan="${c.p.id}" data-i="${c.wi*7+c.di}" title="Open ${esc(r.a.name)}'s ${DAYS_LONG[di]}">
+      ${r.days.map((c,di)=>!c?`<td class="none">—</td>`:`<td class="k-${c.k}${ov.togetherCells.has(r.a.id+":"+di)?" together":ov.sharedCells.has(r.a.id+":"+di)?" shared":""}" data-act="open-day" data-plan="${c.p.id}" data-i="${c.wi*7+c.di}" title="Open ${esc(r.a.name)}'s ${DAYS_LONG[di]}">
         <div class="dt">${c.t?resolveText(c.t,paces(c.p)):"—"}</div>${schedHTML(c.sch)}${c.pt?`<span class="pt" title="${esc(ptTitle(c.p))}">PT</span>`:""}${requestOn(c.p.id,c.wi,c.di)?`<span class="rqtag">Request</span>`:""}${c.link?`<a class="sv" href="${esc(c.link)}" target="_blank" rel="noopener">Strava ↗</a>`:""}</td>`).join("")}</tr>`;
   }).join("");
   const ovl=ov.list.length?`<ul class="ovl">${ov.list.map(o=>{
     const d=addDays(wk,o.di),when=`${DAYS[o.di]} ${fmtD(d)}`;
+    if(o.kind==="time")return `<li><span class="tag go">Same time</span><b>${when} · ${fmtTime(o.members[0].c.sch.t)}${o.samePlace?" · "+esc(o.loc):""}</b> <span class="who">— ${o.members.map(m=>`${esc(m.a.name)} at ${fmtTime(m.c.sch.t)}${!o.samePlace&&m.c.sch.loc?", "+esc(m.c.sch.loc):""} (${esc(firstLine(m.c))})`).join("; ")}. ${o.samePlace?"Same place too, so they can run together.":"They could work out together."}</span></li>`;
     return o.kind==="place"
       ?`<li><span class="tag">Same place</span><b>${when} · ${esc(o.loc)}</b> <span class="who">— ${o.members.map(m=>`${esc(m.a.name)}${m.c.sch.t?" at "+fmtTime(m.c.sch.t):""} (${esc(firstLine(m.c))})`).join("; ")}</span></li>`
       :`<li><span class="tag">Workouts</span><b>${when}</b> <span class="who">— ${o.members.map(m=>`${esc(m.a.name)} (${esc(firstLine(m.c))})`).join(", ")}. No shared location set, so they could train together.</span></li>`;
-  }).join("")}</ul>`:`<p class="hint" style="margin:0 0 14px">No overlap this week. Add a time and location to a day and athletes at the same place show up here.</p>`;
+  }).join("")}</ul>`:`<p class="hint" style="margin:0 0 14px">No overlap this week. Add a time to a day and athletes training within ${TOGETHER_MIN} minutes of each other turn green here.</p>`;
   const end=addDays(wk,6);
   app.innerHTML=`<div class="page-h"><div><p class="eyebrow">${aths.length} athlete${aths.length>1?"s":""}</p><h1>Team</h1></div></div>
     ${sharingBanner()}${S.coach?requestsSection(openRequests(),true):""}
@@ -1659,6 +1704,7 @@ function renderTeam(){
       <button class="btn ghost" data-act="team-this">This week</button><input type="date" id="team-pick" aria-label="Go to week" value="${iso(wk)}"></div></div>
     ${ovl}
     <div class="tw-scroll"><table class="tw"><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    <div class="legend2"><span><i style="background:var(--go-soft);box-shadow:inset 0 0 0 2px var(--go)"></i>Same time (within ${TOGETHER_MIN} min): could work out together</span><span><i style="box-shadow:inset 0 0 0 2px var(--accent)"></i>Same place, different time</span></div>
     <p class="hint" style="margin-top:8px">Click any day to open it in that athlete's plan, where you can set the time and location.</p>`;
 }
 
@@ -1693,8 +1739,8 @@ function renderAthlete(){
     <section class="card"><h2>PT plan</h2>
       ${!cs.length?`<p class="hint" style="margin-top:8px">Choose an area of concern to see suggested exercises and the days to do them.</p>`:`
       <p class="hint" style="margin-top:4px">${f?`Strength days for ${f.upcoming?"the first week of":f.past?"the last week of":"this week in"} <b>${esc(f.p.name)}</b>${f.upcoming||f.past?"":` (W${f.wi+1}, ${esc(w.type)})`}.`:"Strength days. Assign a plan to get suggestions from the training week."} ${Array.isArray(a.ptDays)?"You've set these by hand.":"Suggested from the training week."}</p>
-      <div class="ptdays">${DAYS.map((d,i)=>`<button type="button" class="ptd" data-act="pt-day" data-d="${i}" aria-pressed="${days.includes(i)}"${dis}>${d}<span class="k">${kindLbl(i)}</span></button>`).join("")}</div>
-      <p class="hint">${Array.isArray(a.ptDays)?`<button class="btn ghost" data-act="pt-auto"${dis}>Use suggested days</button>`:"Strength goes on workout days first, then easy days, at least a day apart. It stays off the long-run day, the day before it, rest days, and the two days before a race. Tap a day to set your own."}</p>
+      <div class="ptdays">${DAYS.map((d,i)=>`<button type="button" class="ptd" data-act="pt-day" data-d="${i}" aria-pressed="${days.includes(i)}"${am?"":dis}>${d}<span class="k">${kindLbl(i)}</span></button>`).join("")}</div>
+      <p class="hint">${am?(Array.isArray(a.ptDays)?`These are the days you picked. They show as PT in your plan every week. <button class="btn ghost" data-act="pt-auto">Use your coach's suggested days</button>`:"Tap the days you'll do your strength work. They show as PT in your plan every week, and your coach sees them too."):Array.isArray(a.ptDays)?`<button class="btn ghost" data-act="pt-auto"${dis}>Use suggested days</button>`:"Strength goes on workout days first, then easy days, at least a day apart. It stays off the long-run day, the day before it, rest days, and the two days before a race. Tap a day to set your own."}</p>
       ${painful?`<div class="warn">At least one area is marked painful. Strength exercises for it are on hold. Keep the light daily work only if it doesn't hurt, and have ${esc(a.name)} see a physio before loading it.</div>`:""}
       ${exItems(a,true).map(g=>`<div class="exgroup"><h3>${esc(g.ar.name)} <span class="cc sev-${g.c.sev}">${SEV[g.c.sev]}</span>${g.c.note?`<span class="hint">${esc(g.c.note)}</span>`:""}</h3>
         <ul class="exlist">${g.items.map(x=>`<li class="${x.held?"held":""}"><span>${esc(x.n)}</span><span class="when">${x.held?"Hold until cleared":x.t==="load"?"Strength days":"Daily"}</span><span class="dose">${esc(x.dose)}</span></li>`).join("")}</ul></div>`).join("")}
@@ -1725,6 +1771,29 @@ async function initCloud(){
   const again=()=>{if(document.visibilityState==="visible")refreshCloud(false)};
   setInterval(again,120000);document.addEventListener("visibilitychange",again);
 }
+// Supabase refused a write: work out whether the sign-in lapsed or the login isn't a coach, say which,
+// and keep the edits as unsaved so nothing is lost.
+async function cloudWriteFailed(e,planId){
+  const msg=(e&&e.message)||"";
+  const denied=/row-level security|permission denied|JWT|not authorized/i.test(msg);
+  if(planId&&planId===S.cur&&S.draft){
+    S.unsaved=true;
+    lsSet("blockbuilder.draft",JSON.stringify({id:S.cur,base:null,plan:stripId(S.draft)}));
+  }
+  if(!denied){status("Not saved: "+(msg||"check your connection")+". Your changes are kept. Press Save to try again.",true);renderTop();return}
+  let sess=null;try{sess=(await S.sb.auth.getSession()).data.session}catch(x){}
+  const coach=sess?await checkCoach():false;
+  if(!sess){S.coach=false;status("Not saved: you've been signed out. Sign in again, then press Save. Your changes are kept.",true)}
+  else if(!coach){S.coach=false;status(`Not saved: ${sess.user&&sess.user.email||"this login"} isn't on the coach list in Supabase. Your changes are kept.`,true)}
+  else status("Not saved: Supabase refused the change. Check the policies from supabase-setup.sql. Your changes are kept.",true);
+  render();
+}
+async function recheckCoach(){
+  let sess=null;try{sess=(await S.sb.auth.getSession()).data.session}catch(x){}
+  if(sess&&await checkCoach())return;
+  S.coach=false;
+  status(sess?`${sess.user&&sess.user.email||"This login"} isn't on the coach list in Supabase, so editing is off.`:"You've been signed out. Sign in again to keep editing.",true);
+}
 async function checkCoach(){try{const {data,error}=await S.sb.rpc("is_coach");return !error&&data===true}catch(e){return false}}
 async function refreshCloud(first){
   if(S.refreshing)return;S.refreshing=true;
@@ -1734,6 +1803,7 @@ async function refreshCloud(first){
     const priv={};
     if(S.coach){const r=await S.sb.from("athlete_private").select("id,data,token");if(r.error)throw r.error;r.data.forEach(x=>priv[x.id]=Object.assign({},x.data,{token:x.token}))}
     else if(S.athLink){const r=await S.sb.rpc("athlete_view",{p_athlete:S.athLink.id,p_token:S.athLink.token});if(!r.error&&r.data)priv[S.athLink.id]=Object.assign({},r.data,{token:S.athLink.token});else S.athLinkBad=true}
+    if(S.coach)await recheckCoach();
     let curChanged=false;const seen=new Set();
     pl.data.forEach(row=>{seen.add(row.id);if(S.dirty.has(row.id))return;const d=Object.assign(row.data||{},{id:row.id}),have=S.plans[row.id];
       if(!have||have.updatedAt!==d.updatedAt){S.plans[row.id]=d;if(row.id===S.cur)curChanged=true}});
@@ -1784,7 +1854,8 @@ async function doSignIn(){
   if(error){err.textContent=error.message==="Invalid login credentials"?"That email and password don't match a coach login.":error.message;return}
   if(!(await checkCoach())){await S.sb.auth.signOut();err.textContent="This login isn't on the coach list. Add its email to the coaches table in Supabase (see the setup file).";return}
   S.coach=true;S.coachEmail=data.user&&data.user.email;closeModal();S.athLink=null;
-  await refreshCloud(true);render();toast("Signed in. Your saves now update everyone's view.");
+  S.statusErr=false;
+  await refreshCloud(true);render();toast(S.unsaved?"Signed in. Press Save to save the changes you kept.":"Signed in. Your saves now update everyone's view.");
 }
 
 /* sharing setup + moving this browser's plans up */
@@ -1843,6 +1914,19 @@ async function uploadLocal(btn){
     lsSet("blockbuilder.uploaded","1");
     await refreshCloud(false);render();toast(`Uploaded ${n} plan${n===1?"":"s"}`);
   }catch(e){btn.disabled=false;btn.textContent="Try again";toast("Upload stopped: "+(e&&e.message||"try again"))}
+}
+
+// Athlete link: save the athlete's chosen PT days (null = back to suggested).
+async function athleteSetPtDays(days){
+  const at=S.athletes[S.athLink.id];if(!at)return;
+  const prev=at.ptDays;at.ptDays=days;renderAthlete();
+  const {error}=await S.sb.rpc("set_pt_days",{p_athlete:S.athLink.id,p_token:S.athLink.token,p_days:days});
+  if(error){
+    at.ptDays=prev;renderAthlete();
+    toast(/set_pt_days|function/i.test(error.message)?"Choosing PT days isn't switched on yet. Ask your coach to run the PT days update in Supabase.":"Not saved: "+error.message);
+    return;
+  }
+  toast(days?"PT days saved. They're in your plan now.":"Back to your coach's suggested days");
 }
 
 /* ---------- change requests ---------- */
