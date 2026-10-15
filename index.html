@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- Shared plans: your Supabase settings go on the next line. The app's Team page shows the exact line to paste. -->
+<script>window.BLOCK_BUILDER_SUPABASE={url:"",anonKey:""};</script>
 <title>Marathon Block Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -206,6 +208,29 @@ table.tw{border-collapse:collapse;width:100%;min-width:940px;table-layout:fixed}
 .sch{font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
 .sch b{color:var(--ink);font-weight:600}
 .pt{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--easy);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-top:5px;margin-right:4px;vertical-align:middle}
+
+/* requests + sharing */
+.rqs{display:grid;gap:10px;margin-bottom:22px}
+.rq-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;gap:8px}
+.rq-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+.rq-top .when{color:var(--muted)}
+.rq-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.rq-box{background:var(--sunk);border-radius:6px;padding:8px 10px;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.rq-box .k{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px;white-space:normal}
+.rq-msg{font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.rq-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rq-acts input{flex:1 1 220px}
+.st{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:4px;padding:1px 6px;border:1px solid currentColor}
+.st-open{color:var(--accent)} .st-approved{color:var(--easy)} .st-declined{color:var(--hard)} .st-done{color:var(--muted)}
+.rqtag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--accent);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-top:5px;margin-right:4px;vertical-align:middle}
+.tabs .n{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:11px;line-height:18px;text-align:center;margin-left:4px}
+.setup ol{margin:8px 0 12px;padding-left:20px;display:grid;gap:6px;font-size:14px}
+.setup .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.setup code,.mono{font-family:var(--f-mono);font-size:12px;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:1px 5px;overflow-wrap:anywhere}
+.linkrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.linkrow input{flex:1 1 240px;font-family:var(--f-mono);font-size:12px}
+.athmode .day[data-w]{cursor:pointer}
+@media (max-width:760px){.rq-cols,.setup .two{grid-template-columns:minmax(0,1fr)}}
 
 /* athlete profile */
 .back{background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-weight:600;font-size:14px}
@@ -578,18 +603,42 @@ const S={athletes:{},page:lsGetEarly("blockbuilder.page")||"team",teamWeek:null,
 const LS="blockbuilder.plans.v1",LSA="blockbuilder.athletes.v1";
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-const RO=()=>S.mode==="snapshot";
+// Coach edits; anyone else viewing the shared (cloud) site is read-only. Athletes with their link can send requests.
+const RO=()=>S.mode==="snapshot"||(S.mode==="cloud"&&!S.coach);
+const athleteMode=()=>S.mode==="cloud"&&!S.coach&&!!S.athLink&&!S.athLinkBad;
+// Supabase settings: baked into index.html (window.BLOCK_BUILDER_SUPABASE) so athletes connect too, or saved in this browser for testing.
+const SB_CFG=(()=>{
+  if(!STANDALONE)return null;
+  const c=window.BLOCK_BUILDER_SUPABASE||{};if(c.url&&c.anonKey)return{url:c.url,anonKey:c.anonKey,embedded:true};
+  try{const l=JSON.parse(localStorage.getItem("blockbuilder.supabase")||"null");if(l&&l.url&&l.anonKey)return{url:l.url,anonKey:l.anonKey,embedded:false}}catch(e){}
+  return null;
+})();
+(()=>{const m=location.hash.match(/^#athlete=([A-Za-z0-9_]+)\.([a-f0-9]+)$/);if(m)S.athLink={id:m[1],token:m[2]}})();
 function status(t,err){S.statusText=t;S.statusErr=!!err;const el=$("#status");if(!el)return;el.textContent=t;el.classList.toggle("err",!!err)}
 function renderTop(){
+  if(athleteMode())return renderTopAthlete();
   const onTeam=S.page!=="plan";
-  const tabs=`<nav class="tabs" aria-label="Sections"><button type="button" data-act="page" data-page="team" aria-current="${onTeam?"page":"false"}">Team</button><button type="button" data-act="page" data-page="plan" aria-current="${onTeam?"false":"page"}">Plans${S.unsaved?' <span class="dot" title="Unsaved changes">•</span>':""}</button></nav>`;
-  const teamCtl=RO()?'<span class="badge">Read-only copy</span>':S.mode==="loading"?"":'<button class="btn" data-act="add-athlete">+ Add athlete</button>';
+  const openN=S.coach?openRequests().length:0;
+  const auth=S.mode!=="cloud"?"":S.coach?`<button class="btn ghost" data-act="sign-out" title="Signed in as ${esc(S.coachEmail||"")}">Sign out</button>`:`<button class="btn" data-act="sign-in">Coach sign in</button>`;
+  const tabs=`<nav class="tabs" aria-label="Sections"><button type="button" data-act="page" data-page="team" aria-current="${onTeam?"page":"false"}">Team${openN?`<span class="n" title="${openN} open change request${openN>1?"s":""}">${openN}</span>`:""}</button><button type="button" data-act="page" data-page="plan" aria-current="${onTeam?"false":"page"}">Plans${S.unsaved?' <span class="dot" title="Unsaved changes">•</span>':""}</button></nav>`;
+  const roBadge=`<span class="badge">${S.mode==="cloud"?"View only":"Read-only copy"}</span>`;
+  const teamCtl=RO()?roBadge:S.mode==="loading"?"":'<button class="btn" data-act="add-athlete">+ Add athlete</button>';
   $("#topbar").innerHTML=`<div class="top-in">
     <div class="brand">Block<b>/</b>Builder</div>
     ${tabs}
     ${onTeam?teamCtl:`<select id="planSel" aria-label="Open a plan"></select>
-    ${RO()?'<span class="badge">Read-only copy</span>':S.mode==="loading"?"":`<button class="btn${S.unsaved?" primary":""}" id="saveBtn" data-act="save"${S.unsaved?"":" disabled"} title="Save (⌘/Ctrl+S)">Save</button><button class="btn" data-act="save-as">Save as…</button><button class="btn ghost" id="discardBtn" data-act="discard"${S.unsaved?"":" hidden"}>Discard changes</button><button class="btn" data-act="new">+ New plan</button>`}`}
+    ${RO()?roBadge:S.mode==="loading"?"":`<button class="btn${S.unsaved?" primary":""}" id="saveBtn" data-act="save"${S.unsaved?"":" disabled"} title="Save (⌘/Ctrl+S)">Save</button><button class="btn" data-act="save-as">Save as…</button><button class="btn ghost" id="discardBtn" data-act="discard"${S.unsaved?"":" hidden"}>Discard changes</button><button class="btn" data-act="new">+ New plan</button>`}`}
+    ${auth}
     <span class="status${S.statusErr?" err":""}" id="status">${esc(S.statusText||"Loading plans…")}</span></div>`;
+  renderSelect();
+}
+function renderTopAthlete(){
+  const a=S.athletes[S.athLink.id],onPlan=S.page==="plan",mine=openRequests().length;
+  $("#topbar").innerHTML=`<div class="top-in">
+    <div class="brand">Block<b>/</b>Builder</div>
+    <nav class="tabs" aria-label="Sections"><button type="button" data-act="page" data-page="plan" aria-current="${onPlan?"page":"false"}">My plan</button><button type="button" data-act="page" data-page="athlete" aria-current="${onPlan?"false":"page"}">PT & requests${mine?`<span class="n">${mine}</span>`:""}</button></nav>
+    ${onPlan?'<select id="planSel" aria-label="Open a plan"></select>':""}
+    <span class="status${S.statusErr?" err":""}" id="status">${esc(S.statusText||"")}</span></div>`;
   renderSelect();
 }
 const fmtStamp=ms=>{const d=new Date(ms);return `${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`};
@@ -631,6 +680,8 @@ async function initStore(){
     for(const id in (SNAP.athletes||{}))S.athletes[id]=Object.assign(clone(SNAP.athletes[id]),{id});
     status("Updated "+fmtStamp(SNAP.updatedAt));
     renderTop();afterLoad(true);
+  }else if(SB_CFG){
+    await initCloud();
   }else{
     S.mode="local";
     try{const raw=JSON.parse(lsGet(LS)||"{}");for(const id in raw)S.plans[id]=Object.assign(raw[id],{id})}catch(e){}
@@ -688,7 +739,7 @@ function updateSaveUI(){
   if(S.unsaved)status("Unsaved changes");
   renderSelect();
 }
-function savedMsg(){return S.mode==="db"?"All changes saved to the shared library":"All changes saved in this browser"}
+function savedMsg(){return S.mode==="db"?"All changes saved to the shared library":S.mode==="cloud"?"All changes saved · athletes see them":"All changes saved in this browser"}
 function savePlan(){
   if(!S.draft||RO())return;
   if(S.editing)commitEditor();
@@ -726,7 +777,9 @@ async function flush(id){
   const p=S.plans[id];if(!p){S.dirty.delete(id);return}
   S.writing[id]=true;
   try{
-    if(S.mode==="db")await S.col.doc(id).set(stripId(p));else saveLocal();
+    if(S.mode==="db")await S.col.doc(id).set(stripId(p));
+    else if(S.mode==="cloud"){const {error}=await S.sb.from("plans").upsert({id,data:stripId(p),updated_at:new Date().toISOString()});if(error)throw error}
+    else saveLocal();
     if(!S.unsaved)status(savedMsg());
   }catch(e){
     status(e&&e.code==="not_granted"?"View only: you can't save changes to this library":"Not saved: "+(e&&e.message||"try again"),true);
@@ -737,7 +790,11 @@ async function flush(id){
 }
 async function removePlan(id){
   delete S.plans[id];if(id===S.cur){S.unsaved=false;clearDraft()}S.dirty.delete(id);clearTimeout(S.timers[id]);
-  try{if(S.mode==="db")await S.col.doc(id).delete();else saveLocal();status("Plan deleted")}
+  try{
+    if(S.mode==="db")await S.col.doc(id).delete();
+    else if(S.mode==="cloud"){const {error}=await S.sb.from("plans").delete().eq("id",id);if(error)throw error}
+    else saveLocal();
+    status("Plan deleted")}
   catch(e){status("Couldn't delete: "+(e&&e.message||"try again"),true)}
 }
 function addPlan(p){
@@ -764,6 +821,7 @@ const P=()=>S.draft;
 function renderSelect(){
   const sel=$("#planSel");if(!sel)return;const ids=Object.keys(S.plans).sort((a,b)=>(S.plans[a].raceDate<S.plans[b].raceDate?1:-1));
   const nm=id=>id===S.cur&&S.draft?S.draft:S.plans[id];
+  if(athleteMode())for(let i=ids.length-1;i>=0;i--)if(nm(ids[i]).athleteId!==S.athLink.id)ids.splice(i,1);
   const opt=id=>`<option value="${id}"${id===S.cur?" selected":""}>${esc(nm(id).name||"Untitled plan")} · ${esc(nm(id).raceDate||"")}${id===S.cur&&S.unsaved?" (unsaved)":""}</option>`;
   const groups={};ids.forEach(id=>{const g=athleteName(nm(id))||"No athlete";(groups[g]=groups[g]||[]).push(id)});
   sel.innerHTML=ids.length?Object.keys(groups).sort().map(g=>`<optgroup label="${esc(g)}">${groups[g].map(opt).join("")}</optgroup>`).join(""):`<option>No plans yet</option>`;
@@ -815,9 +873,10 @@ function dayCell(p,wi,di,Pc,v="w"){
   const lbl=v==="m"?`<span class="num">${d.getUTCDate()}</span>${isToday?'<span class="tdy">Today</span>':""}`
     :v==="d"?`<span>${DAYS_LONG[di]}</span>${isToday?'<span class="tdy">Today</span>':""}`
     :`<span>${DAYS[di]}</span><span class="num">${d.getUTCDate()}</span>`;
-  return `<div class="day k-${k}${RO()?" ro":""}${isToday?" today":""}" data-w="${wi}" data-d="${di}" data-v="${v}"${RO()?"":(v==="d"?"":' draggable="true"')+' tabindex="0"'} aria-label="${DAYS_LONG[di]} ${fmtD(d)}: ${esc(t?plainText(t,Pc):"empty")}${RO()?"":". Press Enter to edit."}">
+  const am=athleteMode();
+  return `<div class="day k-${k}${RO()&&!am?" ro":""}${isToday?" today":""}" data-w="${wi}" data-d="${di}" data-v="${v}"${RO()?(am?' tabindex="0"':""):(v==="d"?"":' draggable="true"')+' tabindex="0"'} aria-label="${DAYS_LONG[di]} ${fmtD(d)}: ${esc(t?plainText(t,Pc):"empty")}${am?". Press Enter to request a change.":RO()?"":". Press Enter to edit."}">
     <div class="dl">${lbl}</div>
-    <div class="dt">${t?resolveText(t,Pc):"—"}</div>${schedHTML(schedOf(w,di))}${ptDaysFor(p,wi).includes(di)?`<span class="pt" title="${esc(ptTitle(p))}">PT</span>`:""}${linkOf(w,di)?`<a class="sv" href="${esc(linkOf(w,di))}" target="_blank" rel="noopener" title="Open this run on Strava">${v==="m"?"Strava ↗":"View on Strava ↗"}</a>`:""}</div>`;
+    <div class="dt">${t?resolveText(t,Pc):"—"}</div>${schedHTML(schedOf(w,di))}${ptDaysFor(p,wi).includes(di)?`<span class="pt" title="${esc(ptTitle(p))}">PT</span>`:""}${requestOn(p.id,wi,di)?`<span class="rqtag" title="Open change request">Request</span>`:""}${linkOf(w,di)?`<a class="sv" href="${esc(linkOf(w,di))}" target="_blank" rel="noopener" title="Open this run on Strava">${v==="m"?"Strava ↗":"View on Strava ↗"}</a>`:""}</div>`;
 }
 const typeSelect=(wi,w)=>`<select data-wf="type" data-w="${wi}"${RO()?" disabled":""} aria-label="Week ${wi+1} type" title="Changing the type swaps in workbook workouts of that type">${TYPES.map(t=>`<option${t===w.type?" selected":""}>${t}</option>`).join("")}</select>`;
 function weekHTML(p,wi,Pc,nowIdx){
@@ -883,10 +942,11 @@ function calHTML(p,Pc,nowIdx){
   if(S.view==="day")return dayHTML(p,Pc);
   return `<div class="weeks" id="weeks">${p.weeks.map((_,wi)=>weekHTML(p,wi,Pc,nowIdx)).join("")}</div>`;
 }
+const CAL_HINT_ATH="Tap a day to ask your coach for a change.";
 const CAL_HINT={week:"Click a day to edit it or add its Strava link. Drag one day onto another to swap them.",month:"Click a day to edit it or add its Strava link. Drag one day onto another to swap them.",day:"Click the workout to edit it or add its Strava link. Use ← and → to move between days."};
 function calHeader(){
   return `<div class="seg" role="group" aria-label="Calendar view">${["month","week","day"].map(v=>`<button type="button" data-act="view" data-view="${v}" aria-pressed="${S.view===v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join("")}</div>
-    <span class="hint grow">${RO()?"Read-only copy. Use Share & export to take a copy.":CAL_HINT[S.view]}</span>`;
+    <span class="hint grow">${athleteMode()?CAL_HINT_ATH:RO()?"View only. Use Share & export to take a copy.":CAL_HINT[S.view]}</span>`;
 }
 function renderCal(){
   const p=P();if(!p||!$("#cal"))return;
@@ -899,6 +959,11 @@ function nowIndex(p){const i=Math.floor((todayD()-mondayOf(toD(p.start)))/DAY_MS
 function render(){
   S.remotePending=false;
   renderTop();
+  document.body.classList.toggle("athmode",athleteMode());
+  if(athleteMode()){
+    if(S.page!=="plan"){S.page="athlete";S.athSel=S.athLink.id}
+    if(S.draft&&S.draft.athleteId!==S.athLink.id){const f=focusPlan(S.athLink.id);if(f){setCurrent(f.p.id);return render()}S.cur=null;S.draft=null}
+  }
   if(S.page==="team")return renderTeam();
   if(S.page==="athlete")return renderAthlete();
   const app=$("#app"),p=P();
@@ -1139,13 +1204,14 @@ document.addEventListener("click",e=>{
   const cell=e.target.closest&&e.target.closest(".day[data-w]");
   if(cell&&!e.target.closest("textarea,.svrow,.schrow")&&!(S.editing&&S.editing.cell===cell)){
     // on phones the month grid is too small to edit in place: open that day instead
+    if(athleteMode()){requestModal(+cell.dataset.w,+cell.dataset.d);return}
     if(cell.dataset.v==="m"&&window.matchMedia("(max-width:760px)").matches){setView("day",+cell.dataset.w*7+ +cell.dataset.d);return}
     openEditor(cell);return}
   const b=e.target.closest&&e.target.closest("[data-act]");if(b)act(b.dataset.act,b);
 });
 document.addEventListener("keydown",e=>{
   const cell=e.target.classList&&e.target.classList.contains("day")?e.target:null;
-  if(cell&&e.target===cell&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openEditor(cell);return}
+  if(cell&&e.target===cell&&(e.key==="Enter"||e.key===" ")){e.preventDefault();if(athleteMode())requestModal(+cell.dataset.w,+cell.dataset.d);else openEditor(cell);return}
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="s"){e.preventDefault();if(S.unsaved)savePlan();return}
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
   if(S.view==="day"&&!typing&&!S.editing&&!$("#scrim")&&P()){
@@ -1297,6 +1363,22 @@ function act(a,btn){
         });
       break;}
     case"publish-snap":publishSnapshot(btn);break;
+    case"sign-in":signInModal();break;
+    case"sign-in-ok":doSignIn();break;
+    case"sign-out":S.sb.auth.signOut().then(()=>location.reload());break;
+    case"sb-save":{
+      const url=$("#sb-url").value.trim().replace(/\/+$/,""),key=$("#sb-key").value.trim();
+      if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)){$("#sb-err").textContent="The Project URL looks like https://abcdefgh.supabase.co";return}
+      if(key.length<40){$("#sb-err").textContent="Paste the whole anon public key. It's a long string starting with eyJ.";return}
+      lsSet("blockbuilder.supabase",JSON.stringify({url,anonKey:key}));location.reload();break;}
+    case"sb-forget":lsSet("blockbuilder.supabase","");location.reload();break;
+    case"sb-copy-config":copyText($("#sb-config").value,"Copied. Paste it into index.html as described.");break;
+    case"upload-local":uploadLocal(btn);break;
+    case"copy-ath-link":copyText(athleteLink(S.athletes[btn.dataset.id]),"Athlete link copied");break;
+    case"new-ath-link":{const at=S.athletes[btn.dataset.id];at.token=randHex(12);saveAthlete(at).then(()=>{renderAthlete();toast("New link made. The old one no longer works.")});break;}
+    case"rq-approve":case"rq-decline":case"rq-done":answerRequest(btn.dataset.id,a.slice(3),btn);break;
+    case"rq-send":sendRequest(btn);break;
+    case"rq-open":{const r=(S.requests||[]).find(x=>x.id===btn.dataset.id);if(!r)return;btn.dataset.plan=r.plan_id;btn.dataset.i=String(requestIndex(r));act("open-day",btn);break;}
     case"page":{if(S.editing)commitEditor();S.page=btn.dataset.page;lsSet("blockbuilder.page",S.page);render();window.scrollTo(0,0);break;}
     case"add-athlete":newAthleteModal(a=>{S.athSel=a.id;S.page="athlete";render();window.scrollTo(0,0)});break;
     case"ath-create-ok":{const n=$("#m-ath").value.trim();if(!n){$("#m-err").textContent="Enter a name.";return}const a=newAthlete(n);saveAthlete(a);closeModal();const cb=S.athCb;S.athCb=null;cb&&cb(a);break;}
@@ -1388,14 +1470,20 @@ async function saveAthlete(a){
   a.updatedAt=Date.now();S.athletes[a.id]=a;
   S.athPending=S.athPending||new Set();S.athPending.add(a.id);
   try{
-    if(S.mode==="db")await S.db.collection("athletes").doc(a.id).set(stripId(a));else saveLocalAthletes();
+    if(S.mode==="db")await S.db.collection("athletes").doc(a.id).set(stripId(a));
+    else if(S.mode==="cloud")await cloudSaveAthlete(a);
+    else saveLocalAthletes();
     if(!S.unsaved)status(savedMsg());
   }catch(e){status("Not saved: "+(e&&e.message||"try again"),true)}
   S.athPending.delete(a.id);
 }
 async function removeAthlete(id){
   delete S.athletes[id];
-  try{if(S.mode==="db")await S.db.collection("athletes").doc(id).delete();else saveLocalAthletes();status("Athlete removed")}
+  try{
+    if(S.mode==="db")await S.db.collection("athletes").doc(id).delete();
+    else if(S.mode==="cloud"){const {error}=await S.sb.from("athletes").delete().eq("id",id);if(error)throw error}
+    else saveLocalAthletes();
+    status("Athlete removed")}
   catch(e){status("Couldn't remove: "+(e&&e.message||"try again"),true)}
 }
 // Every plan belongs to an athlete; older plans are matched to one by name.
@@ -1530,7 +1618,7 @@ function firstLine(c){return plainText(c.t,paces(c.p)).split("\n")[0]}
 function renderTeam(){
   const app=$("#app"),aths=sortedAthletes();
   if(!aths.length){
-    app.innerHTML=`<div class="empty"><p class="eyebrow">Team</p><h1>No athletes yet</h1><p>Add each athlete you coach, then build or assign a plan for them. The team week shows everyone's sessions side by side.</p>
+    app.innerHTML=`${sharingBanner()}<div class="empty"><p class="eyebrow">Team</p><h1>No athletes yet</h1><p>Add each athlete you coach, then build or assign a plan for them. The team week shows everyone's sessions side by side.</p>
       <div${RO()?" hidden":""}><button class="btn primary" data-act="add-athlete">Add your first athlete</button></div></div>`;return;
   }
   const wk=toD(teamWeek()),rows=teamRows(wk),ov=overlaps(rows),t=todayD();
@@ -1554,7 +1642,7 @@ function renderTeam(){
     return `<tr><td class="ath" style="--ac:var(--a${r.a.color%6})"><div class="aname"><span class="adot"></span><button data-act="open-athlete" data-id="${r.a.id}">${esc(r.a.name)}</button></div>
       ${f?`<div class="ameta t-${esc(f.w.type)}"><span class="tpill">${esc(f.w.type)}</span> ${f.w.miles??"—"} mi</div><div class="ameta">${esc(f.p.name)}</div>`:`<div class="ameta">No plan this week</div>`}</td>
       ${r.days.map((c,di)=>!c?`<td class="none">—</td>`:`<td class="k-${c.k}${ov.sharedCells.has(r.a.id+":"+di)?" shared":""}" data-act="open-day" data-plan="${c.p.id}" data-i="${c.wi*7+c.di}" title="Open ${esc(r.a.name)}'s ${DAYS_LONG[di]}">
-        <div class="dt">${c.t?resolveText(c.t,paces(c.p)):"—"}</div>${schedHTML(c.sch)}${c.pt?`<span class="pt" title="${esc(ptTitle(c.p))}">PT</span>`:""}${c.link?`<a class="sv" href="${esc(c.link)}" target="_blank" rel="noopener">Strava ↗</a>`:""}</td>`).join("")}</tr>`;
+        <div class="dt">${c.t?resolveText(c.t,paces(c.p)):"—"}</div>${schedHTML(c.sch)}${c.pt?`<span class="pt" title="${esc(ptTitle(c.p))}">PT</span>`:""}${requestOn(c.p.id,c.wi,c.di)?`<span class="rqtag">Request</span>`:""}${c.link?`<a class="sv" href="${esc(c.link)}" target="_blank" rel="noopener">Strava ↗</a>`:""}</td>`).join("")}</tr>`;
   }).join("");
   const ovl=ov.list.length?`<ul class="ovl">${ov.list.map(o=>{
     const d=addDays(wk,o.di),when=`${DAYS[o.di]} ${fmtD(d)}`;
@@ -1564,6 +1652,7 @@ function renderTeam(){
   }).join("")}</ul>`:`<p class="hint" style="margin:0 0 14px">No overlap this week. Add a time and location to a day and athletes at the same place show up here.</p>`;
   const end=addDays(wk,6);
   app.innerHTML=`<div class="page-h"><div><p class="eyebrow">${aths.length} athlete${aths.length>1?"s":""}</p><h1>Team</h1></div></div>
+    ${sharingBanner()}${S.coach?requestsSection(openRequests(),true):""}
     <section class="roster">${cards}</section>
     <div class="sect-h"><h2>Team week</h2>
       <div class="wknav"><button class="btn" data-act="team-prev" aria-label="Previous week">‹</button><span class="lbl">${fmtD(wk)} – ${fmtD(end)}</span><button class="btn" data-act="team-next" aria-label="Next week">›</button>
@@ -1582,20 +1671,23 @@ function renderAthlete(){
   const days=Array.isArray(a.ptDays)?a.ptDays:auto,w=f&&f.p.weeks[f.wi];
   const kindLbl=d=>{if(!w)return"";const k=kind(w.days[d]);return d===+f.p.settings.longDay&&k!=="rest"?"Long":k==="work"?"Workout":k==="race"?"Race":k==="rest"?"Rest":k==="easy"?"Easy":""};
   const painful=cs.some(c=>c.sev==="painful");
-  app.innerHTML=`<div class="page-h" style="--ac:var(--a${a.color%6})"><div style="flex:1;min-width:0"><button class="back" data-act="page" data-page="team">‹ Team</button>
+  const am=athleteMode(),reqs=(S.requests||[]).filter(r=>r.athlete_id===a.id);
+  app.innerHTML=`<div class="page-h" style="--ac:var(--a${a.color%6})"><div style="flex:1;min-width:0">${am?`<p class="eyebrow">Your PT and change requests</p>`:`<button class="back" data-act="page" data-page="team">‹ Team</button>`}
       <div class="aname" style="margin-top:8px"><span class="adot" style="width:14px;height:14px"></span><input class="title-in" id="a-name" data-af="name" value="${esc(a.name)}"${RO()?" readonly":""} aria-label="Athlete name"></div></div></div>
   <div class="ath-grid">
     <div class="stack">
       <section class="card"><h2>Plans</h2>
         ${plans.length?`<ul class="plist">${plans.map(p=>`<li><span><b>${esc(p.name)}</b><br><span class="hint">${fmtLong(toD(p.raceDate))} · goal ${esc(p.goal)} · ${p.weeks.length} weeks</span></span><button class="btn" data-act="open-plan" data-plan="${p.id}">Open</button></li>`).join("")}</ul>`:`<p class="hint" style="margin:8px 0 12px">No plans yet.</p>`}
         ${RO()?"":`<button class="btn primary" data-act="ath-new-plan" data-id="${a.id}">New plan for ${esc(a.name)}</button>`}</section>
-      <section class="card"><h2>Notes</h2><textarea class="notes-in" id="a-notes" data-af="notes"${dis} placeholder="Goals, history, how they like to train…" style="margin-top:8px">${esc(a.notes||"")}</textarea></section>
-      <section class="card"><h2>Areas of concern</h2><p class="hint" style="margin-top:4px">Pick any areas to keep an eye on. Each one adds exercises to the PT plan.</p>
+      ${S.mode==="cloud"&&S.coach?athleteLinkCard(a):""}
+      ${am?requestsSection(reqs,false):S.coach&&reqs.length?requestsSection(reqs,true,`${a.name}'s requests`):""}
+      ${am?"":`<section class="card"><h2>Notes</h2><textarea class="notes-in" id="a-notes" data-af="notes"${dis} placeholder="Goals, history, how they like to train…" style="margin-top:8px">${esc(a.notes||"")}</textarea></section>`}
+      ${am&&!cs.length?"":`<section class="card"><h2>Areas of concern</h2><p class="hint" style="margin-top:4px">Pick any areas to keep an eye on. Each one adds exercises to the PT plan.</p>
         <div class="areas">${AREAS.map(ar=>`<button type="button" class="area" data-act="concern-toggle" data-area="${ar.k}" aria-pressed="${cs.some(c=>c.area===ar.k)}"${dis}>${esc(ar.name)}</button>`).join("")}</div>
         ${cs.map(c=>`<div class="concern"><b>${esc(areaOf(c.area).name)}</b>
           <select data-cf="sev" data-area="${c.area}" aria-label="${esc(areaOf(c.area).name)} status"${dis}>${Object.entries(SEV).map(([k,l])=>`<option value="${k}"${k===c.sev?" selected":""}>${l}</option>`).join("")}</select>
           <input type="text" data-cf="note" data-area="${c.area}" value="${esc(c.note||"")}" placeholder="Note (e.g. left side, after long runs)" aria-label="${esc(areaOf(c.area).name)} note"${dis}></div>`).join("")}
-      </section>
+      </section>`}
       ${RO()?"":`<div id="ath-del-area">${plans.length?`<p class="hint">To remove ${esc(a.name)}, first delete or reassign their plans.</p>`:`<button class="btn danger" data-act="ath-del">Remove athlete</button>`}</div>`}
     </div>
     <section class="card"><h2>PT plan</h2>
@@ -1609,6 +1701,227 @@ function renderAthlete(){
       <p class="fine">These are general suggestions, not a diagnosis. If pain gets worse, changes how ${esc(a.name)} runs, or lasts more than a week or two, they should see a physiotherapist or doctor.</p>`}
     </section>
   </div>`;
+}
+
+/* ---------- shared database (Supabase) ---------- */
+const randHex=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>b.toString(16).padStart(2,"0")).join("");
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=()=>rej(new Error("Couldn't load "+src));document.head.appendChild(s)})}
+async function initCloud(){
+  S.mode="cloud";status("Connecting to the shared plans…");renderTop();
+  try{
+    if(!window.supabase)await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js");
+    S.sb=window.supabase.createClient(SB_CFG.url,SB_CFG.anonKey);
+    const {data}=await S.sb.auth.getSession();
+    const sess=data&&data.session;
+    if(sess){S.coachEmail=sess.user&&sess.user.email;S.coach=await checkCoach()}
+  }catch(e){
+    S.mode="local";status("Couldn't reach the shared plans. Showing plans saved in this browser.",true);
+    try{const raw=JSON.parse(lsGet(LS)||"{}");for(const id in raw)S.plans[id]=Object.assign(raw[id],{id})}catch(x){}
+    try{const raw=JSON.parse(lsGet(LSA)||"{}");for(const id in raw)S.athletes[id]=Object.assign(raw[id],{id})}catch(x){}
+    renderTop();afterLoad(true);return;
+  }
+  if(S.athLink&&!S.coach)S.page="plan";
+  await refreshCloud(true);
+  const again=()=>{if(document.visibilityState==="visible")refreshCloud(false)};
+  setInterval(again,120000);document.addEventListener("visibilitychange",again);
+}
+async function checkCoach(){try{const {data,error}=await S.sb.rpc("is_coach");return !error&&data===true}catch(e){return false}}
+async function refreshCloud(first){
+  if(S.refreshing)return;S.refreshing=true;
+  try{
+    const [pl,at]=await Promise.all([S.sb.from("plans").select("id,data"),S.sb.from("athletes").select("id,name,color")]);
+    const err=pl.error||at.error;if(err)throw err;
+    const priv={};
+    if(S.coach){const r=await S.sb.from("athlete_private").select("id,data,token");if(r.error)throw r.error;r.data.forEach(x=>priv[x.id]=Object.assign({},x.data,{token:x.token}))}
+    else if(S.athLink){const r=await S.sb.rpc("athlete_view",{p_athlete:S.athLink.id,p_token:S.athLink.token});if(!r.error&&r.data)priv[S.athLink.id]=Object.assign({},r.data,{token:S.athLink.token});else S.athLinkBad=true}
+    let curChanged=false;const seen=new Set();
+    pl.data.forEach(row=>{seen.add(row.id);if(S.dirty.has(row.id))return;const d=Object.assign(row.data||{},{id:row.id}),have=S.plans[row.id];
+      if(!have||have.updatedAt!==d.updatedAt){S.plans[row.id]=d;if(row.id===S.cur)curChanged=true}});
+    for(const id of Object.keys(S.plans))if(!seen.has(id)&&!S.dirty.has(id)){delete S.plans[id];if(id===S.cur)curChanged=true}
+    const next={};
+    at.data.forEach(r=>{next[r.id]=Object.assign({id:r.id,name:r.name,color:r.color||0,notes:"",concerns:[],ptDays:null},priv[r.id]||{})});
+    for(const id in S.athletes)if(S.athPending&&S.athPending.has(id))next[id]=S.athletes[id];
+    S.athletes=next;
+    await loadRequests();
+    S.plansLoaded=S.athLoaded=true;
+    if(first||(!S.statusErr&&!S.unsaved))status(S.coach?"Signed in as coach · saves go to everyone":athleteMode()?`Hi ${(S.athletes[S.athLink.id]||{}).name||""} · your coach's latest plan`:S.athLinkBad?"This athlete link isn't valid any more. Ask your coach for a new one.":"View only · coaches sign in to edit");
+    if(first&&athleteMode()){S.athSel=S.athLink.id;const f=focusPlan(S.athLink.id);if(f)S.cur=null,setCurrent(f.p.id)}
+    afterLoad(curChanged||first);
+    if(!first&&!S.editing&&!typingInApp()&&!$("#scrim"))render();
+  }catch(e){status("Couldn't load the shared plans: "+(e&&e.message||"check your connection"),true);if(first){afterLoad(true)}}
+  S.refreshing=false;
+}
+async function cloudSaveAthlete(a){
+  const now=new Date().toISOString();
+  let r=await S.sb.from("athletes").upsert({id:a.id,name:a.name,color:a.color||0,updated_at:now});if(r.error)throw r.error;
+  const row={id:a.id,data:{notes:a.notes||"",concerns:a.concerns||[],ptDays:Array.isArray(a.ptDays)?a.ptDays:null},updated_at:now};
+  if(a.token)row.token=a.token;
+  r=await S.sb.from("athlete_private").upsert(row).select("token").single();if(r.error)throw r.error;
+  a.token=r.data.token;
+}
+function athleteLink(a){return location.origin+location.pathname+"#athlete="+a.id+"."+(a.token||"")}
+function athleteLinkCard(a){
+  if(!a.token)return `<section class="card"><h2>Athlete link</h2><p class="hint" style="margin-top:6px">Making ${esc(a.name)}'s private link… reload in a moment if it doesn't appear.</p></section>`;
+  return `<section class="card"><h2>Athlete link</h2>
+    <p class="hint" style="margin-top:6px">Send this to ${esc(a.name)}. It opens their plan and PT, and lets them ask you for changes. Anyone with it can see ${esc(a.name)}'s PT notes, so only send it to them.</p>
+    <div class="linkrow"><input type="text" readonly id="ath-link" value="${esc(athleteLink(a))}" aria-label="Athlete link"><button class="btn primary" data-act="copy-ath-link" data-id="${a.id}">Copy link</button><button class="btn ghost" data-act="new-ath-link" data-id="${a.id}">Make a new link</button></div></section>`;
+}
+
+/* sign in */
+function signInModal(){
+  modal(`<h3>Coach sign in</h3>
+    <div class="field"><label for="si-email">Email</label><input type="email" id="si-email" autocomplete="username"></div>
+    <div class="field"><label for="si-pass">Password</label><input type="password" id="si-pass" autocomplete="current-password"></div>
+    <p class="hint">Use the coach login you created in Supabase (Authentication → Users).</p><p class="hint" id="m-err"></p>
+    <div class="acts"><button class="btn ghost" data-act="close">Cancel</button><button class="btn primary" data-act="sign-in-ok">Sign in</button></div>`);
+  $("#si-pass").addEventListener("keydown",e=>{if(e.key==="Enter")doSignIn()});
+}
+async function doSignIn(){
+  const email=$("#si-email").value.trim(),password=$("#si-pass").value,err=$("#m-err");
+  if(!email||!password){err.textContent="Enter your email and password.";return}
+  err.textContent="Signing in…";
+  const {data,error}=await S.sb.auth.signInWithPassword({email,password});
+  if(error){err.textContent=error.message==="Invalid login credentials"?"That email and password don't match a coach login.":error.message;return}
+  if(!(await checkCoach())){await S.sb.auth.signOut();err.textContent="This login isn't on the coach list. Add its email to the coaches table in Supabase (see the setup file).";return}
+  S.coach=true;S.coachEmail=data.user&&data.user.email;closeModal();S.athLink=null;
+  await refreshCloud(true);render();toast("Signed in. Your saves now update everyone's view.");
+}
+
+/* sharing setup + moving this browser's plans up */
+function localCounts(){let p=0,a=0;try{p=Object.keys(JSON.parse(lsGet(LS)||"{}")).length;a=Object.keys(JSON.parse(lsGet(LSA)||"{}")).length}catch(e){}return{p,a}}
+function sharingBanner(){
+  if(!STANDALONE)return"";
+  if(S.mode==="local"){
+    const open=!!S.setupOpen;
+    return `<details class="card setup" style="margin-bottom:16px"${open?" open":""}>
+      <summary><h2>Share plans with athletes</h2><span class="hint">Right now plans only save in this browser. Connect a free Supabase database so athletes see your saved plans and can send change requests.</span></summary>
+      <ol>
+        <li>Create a free project at <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com</a>.</li>
+        <li>Open <b>SQL Editor</b>, paste the contents of <span class="mono">supabase-setup.sql</span>, change <span class="mono">coach@example.com</span> at the bottom to your email, and click <b>Run</b>.</li>
+        <li>In <b>Authentication → Users</b>, click <b>Add user</b> and create your coach login with that email and a password. Then in <b>Authentication → Sign In / Providers</b>, turn off <b>Allow new users to sign up</b>.</li>
+        <li>In <b>Project Settings → API</b>, copy the <b>Project URL</b> and the <b>anon public</b> key into the boxes below.</li>
+      </ol>
+      <div class="two"><div class="field"><label for="sb-url">Project URL</label><input type="text" id="sb-url" placeholder="https://abcdefgh.supabase.co"></div>
+      <div class="field"><label for="sb-key">anon public key</label><input type="text" id="sb-key" placeholder="eyJhbGciOi…"></div></div>
+      <p class="hint" id="sb-err"></p>
+      <div class="btns" style="display:flex;gap:8px"><button class="btn primary" data-act="sb-save">Connect</button></div>
+    </details>`;
+  }
+  if(S.mode!=="cloud"||!S.coach)return"";
+  let out="";
+  if(!SB_CFG.embedded){
+    const cfg=`<script>window.BLOCK_BUILDER_SUPABASE={url:"${SB_CFG.url}",anonKey:"${SB_CFG.anonKey}"};<\/script>`;
+    out+=`<section class="card setup" style="margin-bottom:16px"><h2>One more step for athletes</h2>
+      <p class="hint" style="margin-top:6px">This browser is connected, but athletes' browsers aren't yet. In your GitHub repo, open <span class="mono">index.html</span>, find the line that starts with <span class="mono">window.BLOCK_BUILDER_SUPABASE</span> near the top, and replace that whole line with this one. Then commit.</p>
+      <div class="linkrow"><input type="text" readonly id="sb-config" value="${esc(cfg)}" aria-label="Settings line"><button class="btn primary" data-act="sb-copy-config">Copy line</button><button class="btn ghost" data-act="sb-forget">Disconnect this browser</button></div></section>`;
+  }
+  const lc=localCounts();
+  if((lc.p||lc.a)&&lsGet("blockbuilder.uploaded")!=="1"){
+    out+=`<section class="card setup" style="margin-bottom:16px"><h2>Move this browser's plans</h2>
+      <p class="hint" style="margin-top:6px">This browser still has ${lc.p} plan${lc.p===1?"":"s"} and ${lc.a} athlete${lc.a===1?"":"s"} saved from before you connected. Upload them so they're shared. Anything with the same name already online is kept, not duplicated.</p>
+      <div class="btns" style="display:flex;gap:8px;margin-top:8px"><button class="btn primary" data-act="upload-local">Upload ${lc.p} plan${lc.p===1?"":"s"}</button></div></section>`;
+  }
+  return out;
+}
+async function uploadLocal(btn){
+  btn.disabled=true;btn.textContent="Uploading…";
+  try{
+    const lp=JSON.parse(lsGet(LS)||"{}"),la=JSON.parse(lsGet(LSA)||"{}");
+    const byName=n=>Object.values(S.athletes).find(x=>x.name.trim().toLowerCase()===String(n||"").trim().toLowerCase());
+    const map={};
+    for(const id in la){const loc=la[id],ex=byName(loc.name);
+      if(ex){map[id]=ex.id;continue}
+      const a=Object.assign({},loc,{id});delete a.token;S.athletes[id]=a;await cloudSaveAthlete(a);map[id]=id}
+    let n=0;
+    for(const id in lp){
+      const p=Object.assign({},lp[id],{id});
+      if(Object.values(S.plans).some(x=>x.name===p.name&&x.raceDate===p.raceDate))continue;
+      if(p.athleteId&&map[p.athleteId])p.athleteId=map[p.athleteId];
+      p.updatedAt=Date.now();S.plans[id]=p;
+      const {error}=await S.sb.from("plans").upsert({id,data:stripId(p),updated_at:new Date().toISOString()});if(error)throw error;n++;
+    }
+    lsSet("blockbuilder.uploaded","1");
+    await refreshCloud(false);render();toast(`Uploaded ${n} plan${n===1?"":"s"}`);
+  }catch(e){btn.disabled=false;btn.textContent="Try again";toast("Upload stopped: "+(e&&e.message||"try again"))}
+}
+
+/* ---------- change requests ---------- */
+async function loadRequests(){
+  if(S.mode!=="cloud")return;
+  if(S.coach){const r=await S.sb.from("requests").select("*").order("created_at",{ascending:false}).limit(300);if(!r.error)S.requests=r.data}
+  else if(athleteMode()){const r=await S.sb.rpc("my_requests",{p_athlete:S.athLink.id,p_token:S.athLink.token});if(!r.error)S.requests=r.data||[]}
+}
+const openRequests=()=>(S.requests||[]).filter(r=>r.status==="open");
+// The day a request is about, following the date if the plan's start moved since.
+function requestIndex(r){
+  const p=planById(r.plan_id);let i=r.week_index*7+r.day_index;
+  if(p&&r.day_date){const j=Math.round((toD(r.day_date)-mondayOf(toD(p.start)))/DAY_MS);if(j>=0&&j<p.weeks.length*7)i=j}
+  return i;
+}
+function requestOn(pid,wi,di){if(S.mode!=="cloud"||!S.requests)return false;return openRequests().some(r=>r.plan_id===pid&&requestIndex(r)===wi*7+di)}
+const ST_LABEL={open:"Waiting for coach",approved:"Approved",declined:"Declined",done:"Answered"};
+function requestsSection(list,coach,title){
+  const open=list.filter(r=>r.status==="open"),done=list.filter(r=>r.status!=="open");
+  if(coach&&!list.length)return"";
+  const card=r=>{
+    const p=planById(r.plan_id),ath=S.athletes[r.athlete_id],Pc=p?paces(p):null,d=r.day_date?toD(r.day_date):null;
+    const when=d?`${DAYS[dow(d)]} ${fmtD(d)}`:`Week ${r.week_index+1}, ${DAYS[r.day_index]}`;
+    return `<article class="rq-card">
+      <div class="rq-top">${coach?`<b>${esc(ath?ath.name:"Athlete")}</b>`:""}<span class="when">${when}${p?" · "+esc(p.name):""}</span><span class="st st-${r.status}">${ST_LABEL[r.status]||r.status}</span></div>
+      <div class="rq-msg">${esc(r.message)}</div>
+      <div class="rq-cols"><div class="rq-box"><span class="k">Planned</span>${r.planned?resolveText(r.planned,Pc):"—"}</div>${r.suggestion?`<div class="rq-box"><span class="k">${coach?"They suggest":"You suggested"}</span>${resolveText(r.suggestion,Pc)}</div>`:""}</div>
+      ${r.reply?`<div class="rq-box"><span class="k">${coach?"Your reply":"Coach's reply"}</span>${esc(r.reply)}</div>`:""}
+      ${coach&&r.status==="open"?`<div class="rq-acts"><input type="text" id="rr-${r.id}" placeholder="Reply (optional)" aria-label="Reply">
+        ${r.suggestion?`<button class="btn primary" data-act="rq-approve" data-id="${r.id}" title="Replace the planned workout with their suggestion">Approve & apply</button>`:""}
+        <button class="btn" data-act="rq-done" data-id="${r.id}">${r.suggestion?"Answer without changing":"Mark answered"}</button>
+        <button class="btn ghost" data-act="rq-decline" data-id="${r.id}">Decline</button>
+        ${p?`<button class="btn ghost" data-act="rq-open" data-id="${r.id}">Open day</button>`:""}</div>`:""}
+    </article>`;
+  };
+  return `<section style="margin-bottom:22px"><div class="sect-h" style="margin-top:6px"><h2>${esc(title||(coach?"Change requests":"Your requests"))}</h2><span class="hint">${open.length} open</span></div>
+    ${!list.length?`<p class="hint">No requests yet. Tap any day in your plan to ask your coach for a change.</p>`:""}
+    <div class="rqs">${open.map(card).join("")}</div>
+    ${done.length?`<details><summary class="hint" style="cursor:pointer;margin-bottom:8px">Answered (${done.length})</summary><div class="rqs">${done.map(card).join("")}</div></details>`:""}</section>`;
+}
+function requestModal(wi,di){
+  const p=P();if(!p)return;
+  const w=p.weeks[wi],d=addDays(mondayOf(toD(p.start)),wi*7+di),t=w.days[di]||"";
+  S.rq={wi,di,date:iso(d),planned:t};
+  modal(`<h3>Request a change</h3>
+    <p class="hint">${DAYS_LONG[di]}, ${fmtD(d)} · ${esc(p.name)}</p>
+    <div class="rq-box"><span class="k">Planned</span>${t?resolveText(t,paces(p)):"—"}</div>
+    <div class="field"><label for="rq-msg">What would you like to change, and why?</label><textarea id="rq-msg" class="io" style="font-family:inherit;font-size:14px" placeholder="e.g. Calf is tight after Sunday. Could I swap this to an easy run?"></textarea></div>
+    <div class="field"><label for="rq-sug">Suggested workout (optional)</label><textarea id="rq-sug" class="io" style="font-family:inherit;font-size:14px" placeholder="e.g. Easy 8mi"></textarea>
+      <small class="hint">If your coach approves, this replaces the planned workout.</small></div>
+    <p class="hint" id="m-err"></p>
+    <div class="acts"><button class="btn ghost" data-act="close">Cancel</button><button class="btn primary" data-act="rq-send">Send to coach</button></div>`);
+}
+async function sendRequest(btn){
+  const msg=$("#rq-msg").value.trim(),sug=$("#rq-sug").value.trim(),err=$("#m-err"),p=P(),q=S.rq;
+  if(!msg){err.textContent="Write a short note about the change.";return}
+  btn.disabled=true;err.textContent="Sending…";
+  const {error}=await S.sb.rpc("submit_request",{p_athlete:S.athLink.id,p_token:S.athLink.token,p_plan:p.id,p_week:q.wi,p_day:q.di,p_date:q.date,p_planned:q.planned,p_message:msg,p_suggestion:sug||null});
+  if(error){btn.disabled=false;err.textContent=error.message;return}
+  closeModal();await loadRequests();render();toast("Sent to your coach");
+}
+async function answerRequest(id,kind,btn){
+  const r=(S.requests||[]).find(x=>x.id===id);if(!r)return;
+  const reply=($("#rr-"+id)||{}).value||"";
+  btn.disabled=true;
+  try{
+    if(kind==="approve"){
+      const saved=S.plans[r.plan_id];if(!saved)throw new Error("That plan no longer exists");
+      const i=requestIndex(r),wi=Math.floor(i/7),di=i%7;
+      saved.weeks[wi].days[di]=r.suggestion;saved.updatedAt=Date.now();
+      if(r.plan_id===S.cur){if(S.unsaved)S.draft.weeks[wi].days[di]=r.suggestion;else S.draft=clone(saved)}
+      S.dirty.add(r.plan_id);await flush(r.plan_id);
+    }
+    const status={approve:"approved",decline:"declined",done:"done"}[kind];
+    const {error}=await S.sb.from("requests").update({status,reply:reply.trim()||null,resolved_at:new Date().toISOString()}).eq("id",id);
+    if(error)throw error;
+    await loadRequests();render();
+    toast(kind==="approve"?"Approved. The plan is updated for everyone.":kind==="decline"?"Declined":"Marked answered");
+  }catch(e){btn.disabled=false;toast("Couldn't update the request: "+(e&&e.message||"try again"))}
 }
 
 /* ---------- share links (standalone site): #plan=<deflated, base64url JSON> ---------- */
