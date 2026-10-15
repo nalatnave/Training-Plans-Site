@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <!-- Shared plans: your Supabase settings go on the next line. The app's Team page shows the exact line to paste. -->
-<script>window.BLOCK_BUILDER_SUPABASE={url:"https://rxwdghmkhxpwekfbavxa.supabase.co",anonKey:"sb_publishable_KhmFJFA8Tmdk3gjtjvjmTw_kHV5UAWT"};</script>
+<script>window.BLOCK_BUILDER_SUPABASE={url:"",anonKey:""};</script>
 <title>Marathon Block Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -217,6 +217,38 @@ table.tw{border-collapse:collapse;width:100%;min-width:940px;table-layout:fixed}
 .sch{font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
 .sch b{color:var(--ink);font-weight:600}
 .pt{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--easy);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-top:5px;margin-right:4px;vertical-align:middle}
+
+/* workout library */
+.lib{position:fixed;right:0;bottom:0;width:340px;z-index:24;background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
+.lib-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px 8px}
+.lib-h h2{font-family:var(--f-display);font-weight:700;font-size:21px;text-transform:uppercase;margin:0}
+.lib-q{margin:0 14px 8px;width:calc(100% - 28px)}
+.lib-cats{display:flex;gap:4px;flex-wrap:wrap;padding:0 14px 10px;border-bottom:1px solid var(--line)}
+.lib-cats button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--muted)}
+.lib-cats button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.lib-list{list-style:none;margin:0;padding:10px 14px 14px;overflow-y:auto;flex:1;display:grid;gap:8px;align-content:start}
+.lib-sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:6px}
+.tpl{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--surface);cursor:grab;display:grid;gap:3px;--cc:var(--muted)}
+.tpl:hover{border-color:var(--muted)}
+.tpl:active{cursor:grabbing}
+.tpl.placing{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tpl-top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.tpl-top b{font-size:14px;display:flex;align-items:center;gap:6px}
+.tpl-top b::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--cc);flex:none}
+.tpl .yours{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 4px}
+.tpl .tx{font-size:12.5px;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.tpl .tx .pz{font-size:11.5px}
+.tpl .pl{border:0;background:none;color:var(--accent);font-weight:700;font-size:12px;cursor:pointer;padding:0}
+.lib-foot{padding:8px 14px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.c-threshold{--cc:var(--medium)} .c-intervals{--cc:var(--hard)} .c-speed{--cc:var(--accent)} .c-hills{--cc:var(--a4)} .c-fartlek{--cc:var(--a5)} .c-mp{--cc:var(--a0)} .c-long{--cc:var(--a2)} .c-easy{--cc:var(--easy)}
+.day.tpl-over{background:var(--go-soft);box-shadow:inset 0 0 0 2px var(--go)}
+body.placing .day[data-w]{cursor:copy}
+body.placing .day[data-w]:hover{background:var(--go-soft)}
+@media (min-width:1101px){body.lib-open main.wrap{padding-right:360px}}
+@media (max-width:1100px){
+  .lib{left:0;width:auto;height:48vh;top:auto!important;border-left:0;border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.1)}
+  body.lib-open main.wrap{padding-bottom:50vh}
+}
 
 /* requests + sharing */
 .rqs{display:grid;gap:10px;margin-bottom:22px}
@@ -608,7 +640,7 @@ function newPlan(o={}){
 
 /* ---------- store: shared plan library (db), falling back to this browser ---------- */
 function lsGetEarly(k){try{return localStorage.getItem(k)}catch(e){return null}}
-const S={athletes:{},page:lsGetEarly("blockbuilder.page")||"team",teamWeek:null,athSel:lsGetEarly("blockbuilder.ath"),draft:null,unsaved:false,view:lsGetEarly("blockbuilder.view")||"week",dayIdx:null,mode:"loading",col:null,plans:{},cur:null,dirty:new Set(),timers:{},writing:{},again:{},editing:null,remotePending:false};
+const S={libOpen:lsGetEarly("blockbuilder.lib")==="1",athletes:{},page:lsGetEarly("blockbuilder.page")||"team",teamWeek:null,athSel:lsGetEarly("blockbuilder.ath"),draft:null,unsaved:false,view:lsGetEarly("blockbuilder.view")||"week",dayIdx:null,mode:"loading",col:null,plans:{},cur:null,dirty:new Set(),timers:{},writing:{},again:{},editing:null,remotePending:false};
 const LS="blockbuilder.plans.v1",LSA="blockbuilder.athletes.v1";
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
@@ -956,7 +988,8 @@ const CAL_HINT_ATH="Tap a day to ask your coach for a change.";
 const CAL_HINT={week:"Click a day to edit it or add its Strava link. Drag one day onto another to swap them.",month:"Click a day to edit it or add its Strava link. Drag one day onto another to swap them.",day:"Click the workout to edit it or add its Strava link. Use ← and → to move between days."};
 function calHeader(){
   return `<div class="seg" role="group" aria-label="Calendar view">${["month","week","day"].map(v=>`<button type="button" data-act="view" data-view="${v}" aria-pressed="${S.view===v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join("")}</div>
-    <span class="hint grow">${athleteMode()?CAL_HINT_ATH:RO()?"View only. Use Share & export to take a copy.":CAL_HINT[S.view]}</span>`;
+    <span class="hint grow">${athleteMode()?CAL_HINT_ATH:RO()?"View only. Use Share & export to take a copy.":CAL_HINT[S.view]}</span>
+    ${RO()?"":`<button type="button" class="btn${S.libOpen?" primary":""}" data-act="lib-toggle" aria-pressed="${!!S.libOpen}">Workout library</button>`}`;
 }
 function renderCal(){
   const p=P();if(!p||!$("#cal"))return;
@@ -970,6 +1003,7 @@ function render(){
   S.remotePending=false;
   renderTop();
   document.body.classList.toggle("athmode",athleteMode());
+  queueMicrotask(renderLib);
   if(athleteMode()){
     if(S.page!=="plan"){S.page="athlete";S.athSel=S.athLink.id}
     if(S.draft&&S.draft.athleteId!==S.athLink.id){const f=focusPlan(S.athLink.id);if(f){setCurrent(f.p.id);return render()}S.cur=null;S.draft=null}
@@ -1196,10 +1230,15 @@ document.addEventListener("touchend",e=>{
 /* drag to swap days */
 let dragFrom=null;
 document.addEventListener("dragstart",e=>{const c=e.target.closest&&e.target.closest(".day[data-w]");if(!c||S.editing||RO())return;dragFrom=c;e.dataTransfer.effectAllowed="move";try{e.dataTransfer.setData("text/plain","day")}catch(x){}});
+document.addEventListener("dragstart",e=>{const t=e.target.closest&&e.target.closest(".tpl[data-tpl]");if(!t)return;S.dragTpl=t.dataset.tpl;e.dataTransfer.effectAllowed="copy";try{e.dataTransfer.setData("text/plain",TEMPLATES.find(x=>x.id===S.dragTpl).t)}catch(x){}});
+document.addEventListener("dragover",e=>{const c=e.target.closest&&e.target.closest(".day[data-w]");if(c&&S.dragTpl){e.preventDefault();e.dataTransfer.dropEffect="copy";document.querySelectorAll(".day.tpl-over").forEach(x=>x!==c&&x.classList.remove("tpl-over"));c.classList.add("tpl-over");return}});
+document.addEventListener("dragend",()=>{S.dragTpl=null;document.querySelectorAll(".day.tpl-over").forEach(x=>x.classList.remove("tpl-over"))});
 document.addEventListener("dragover",e=>{const c=e.target.closest&&e.target.closest(".day[data-w]");if(c&&dragFrom){e.preventDefault();document.querySelectorAll(".day.drop").forEach(x=>x!==c&&x.classList.remove("drop"));c.classList.add("drop")}});
 document.addEventListener("dragend",()=>{dragFrom=null;document.querySelectorAll(".day.drop").forEach(x=>x.classList.remove("drop"))});
 document.addEventListener("drop",e=>{
-  const c=e.target.closest&&e.target.closest(".day[data-w]");if(!c||!dragFrom)return;e.preventDefault();
+  const c=e.target.closest&&e.target.closest(".day[data-w]");
+  if(c&&S.dragTpl){e.preventDefault();const id=S.dragTpl;S.dragTpl=null;c.classList.remove("tpl-over");if(S.editing)commitEditor();applyTemplate(id,+c.dataset.w,+c.dataset.d);return}
+  if(!c||!dragFrom)return;e.preventDefault();
   const p=P(),a=[+dragFrom.dataset.w,+dragFrom.dataset.d],b=[+c.dataset.w,+c.dataset.d];dragFrom=null;
   if(a[0]===b[0]&&a[1]===b[1])return;
   const t=p.weeks[a[0]].days[a[1]];p.weeks[a[0]].days[a[1]]=p.weeks[b[0]].days[b[1]];p.weeks[b[0]].days[b[1]]=t;
@@ -1215,6 +1254,7 @@ document.addEventListener("click",e=>{
   if(cell&&!e.target.closest("textarea,.svrow,.schrow")&&!(S.editing&&S.editing.cell===cell)){
     // on phones the month grid is too small to edit in place: open that day instead
     if(athleteMode()){requestModal(+cell.dataset.w,+cell.dataset.d);return}
+    if(S.placeTpl&&!RO()){applyTemplate(S.placeTpl,+cell.dataset.w,+cell.dataset.d);stopPlacing();return}
     if(cell.dataset.v==="m"&&window.matchMedia("(max-width:760px)").matches){setView("day",+cell.dataset.w*7+ +cell.dataset.d);return}
     openEditor(cell);return}
   const b=e.target.closest&&e.target.closest("[data-act]");if(b)act(b.dataset.act,b);
@@ -1317,7 +1357,7 @@ async function offerFile(filename,data,fallbackMsg){
 }
 function modal(html){$("#layer").innerHTML=`<div class="scrim" id="scrim"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;const f=$("#scrim input,#scrim textarea");if(f)f.focus()}
 function closeModal(){const s=$("#scrim");if(s)s.remove();renderSelect()}
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#scrim"))closeModal()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#scrim"))closeModal();else if(e.key==="Escape"&&S.placeTpl)stopPlacing()});
 document.addEventListener("mousedown",e=>{if(e.target.id==="scrim")closeModal()});
 
 function planForm(title,o,submit){
@@ -1373,6 +1413,13 @@ function act(a,btn){
         });
       break;}
     case"publish-snap":publishSnapshot(btn);break;
+    case"lib-toggle":S.libOpen=!S.libOpen;lsSet("blockbuilder.lib",S.libOpen?"1":"");if(!S.libOpen)stopPlacing();renderLib();if($("#cal-h"))$("#cal-h").innerHTML=calHeader();break;
+    case"lib-cat":S.libCat=btn.dataset.cat;renderLib();break;
+    case"tpl-place":{
+      if(S.placeTpl===btn.dataset.tpl){stopPlacing();break}
+      S.placeTpl=btn.dataset.tpl;document.body.classList.add("placing");renderLib();
+      const x=TEMPLATES.find(t=>t.id===S.placeTpl);
+      toast(`Tap a day to place “${x.n}”`,{label:"Cancel",fn:stopPlacing});break;}
     case"sign-in":signInModal();break;
     case"sign-in-ok":doSignIn();break;
     case"sign-out":S.sb.auth.signOut().then(()=>location.reload());break;
@@ -1471,6 +1518,118 @@ function act(a,btn){
     case"del-yes":{const id=S.cur;S.cur=null;S.draft=null;removePlan(id).then(()=>afterLoad(true));break;}
   }
 }
+
+/* ---------- workout library ---------- */
+const TPL_CATS=[["threshold","Threshold"],["intervals","Intervals"],["speed","Speed"],["hills","Hills"],["fartlek","Fartlek"],["mp","Marathon pace"],["long","Long runs"],["easy","Easy & recovery"]];
+// mine:true = taken from the 2026 Chicago workbook. Paces are pace codes, so each one fits the athlete's goal.
+const TEMPLATES=[
+  // threshold
+  {c:"threshold",n:"Tempo finish",t:"12mi, last 3mi @ {T}",mine:1},
+  {c:"threshold",n:"3 x 3mi threshold",t:"3mi WU\n3 x 3mi @ {T}, 1mi easy\n2mi CD",mine:1},
+  {c:"threshold",n:"8mi tempo",t:"4mi WU\n8mi @ {T}\n4mi CD",mine:1},
+  {c:"threshold",n:"Half-marathon miles",t:"6 x 1mi @ {HMP}, 2min rest",mine:1},
+  {c:"threshold",n:"1k repeats at HMP",t:"8 x 1k @ {HMP/1k}, 90s rest",mine:1},
+  {c:"threshold",n:"Threshold sandwich",t:"2mi @ {T}\n3min rest\n4 x 400 @ {5K/400}, 60s rest\n3min rest\n2mi @ {T}",mine:1},
+  {c:"threshold",n:"Cruise intervals",t:"2mi WU\n5 x 1mi @ {T}, 60s rest\n2mi CD"},
+  {c:"threshold",n:"2 x 15 min",t:"2mi WU\n2 x 15min @ {T}, 3min jog\n2mi CD"},
+  {c:"threshold",n:"Threshold 1ks",t:"2mi WU\n8 x 1k @ {T/1k}, 60s jog\n2mi CD"},
+  {c:"threshold",n:"Double threshold",t:"AM: 5 x 2k @ {T/2k}, 60s jog\nPM: 10 x 400 @ {T/400}, 30s jog"},
+  // intervals
+  {c:"intervals",n:"10 x 400",t:"10 x 400 @ {5K/400}, 60s rest",mine:1},
+  {c:"intervals",n:"10 x 800",t:"10 x 800 @ {10K/800}, 2min rest",mine:1},
+  {c:"intervals",n:"Mile + 800 sets",t:"6 x (1mi @ {HMP/1mi} + 800 @ {5K/800})\n60s rep rest, 2min set rest",mine:1},
+  {c:"intervals",n:"HMP miles + 400s",t:"2 x 1mi @ {HMP}\n4 x 400 @ {5K/400}\n2 x 1mi @ {HMP}\nall 90s rest",mine:1},
+  {c:"intervals",n:"5K-pace 1ks",t:"2mi WU\n6 x 1k @ {5K/1k}, 2:30 jog\n2mi CD"},
+  {c:"intervals",n:"1200s",t:"2mi WU\n5 x 1200 @ {5K/1200}, 3min jog\n2mi CD"},
+  {c:"intervals",n:"Ladder",t:"2mi WU\n400-800-1200-1600-1200-800-400 @ {5K}\njog half the distance between\n2mi CD"},
+  {c:"intervals",n:"CV 1ks",t:"2mi WU\n8 x 1k @ {10K/1k}, 60s jog\n2mi CD"},
+  {c:"intervals",n:"3 x 2k",t:"2mi WU\n3 x 2k @ {10K/2k}, 3min jog\n2mi CD"},
+  // speed
+  {c:"speed",n:"300s and 200s",t:"2 x 5 x 300 @ {5K/300}\n6 x 200 @ {MILE/200}\nrep rest 90s, set rest 5min",mine:1},
+  {c:"speed",n:"1ks + 200s",t:"8 x 1k @ {HMP/1k}, 90s rest\n2 x 4 x 200 @ {MILE/200}, 90s rep rest, 3min set rest",mine:1},
+  {c:"speed",n:"200s at mile pace",t:"2mi WU\n10 x 200 @ {MILE/200}, 200 jog\n2mi CD"},
+  {c:"speed",n:"400s at mile pace",t:"2mi WU\n6 x 400 @ {MILE/400}, 400 jog\n2mi CD"},
+  {c:"speed",n:"150s",t:"Easy 5mi, then 10 x 150m fast and relaxed, walk back"},
+  {c:"speed",n:"Flying 30s",t:"Easy 4mi, then 6 x 30m fly after a 20m build, full recovery"},
+  {c:"speed",n:"Easy + strides",t:"Easy 6mi + 8 x 20s strides, full recovery"},
+  // hills
+  {c:"hills",n:"800s + hill 200s",t:"4 x 800 @ {5K/800}, 2min rest\n5min rest\n8 x 200 hill, 60s rest",mine:1},
+  {c:"hills",n:"Hill sprints",t:"Easy 6mi with 8 x 10s steep hill sprints, walk back"},
+  {c:"hills",n:"60s hill repeats",t:"2mi WU\n8 x 60s uphill at 5K effort, jog down\n2mi CD"},
+  {c:"hills",n:"Long hill repeats",t:"2mi WU\n5 x 3min uphill at threshold effort, jog down\n2mi CD"},
+  {c:"hills",n:"Hill circuit",t:"2mi WU\n4 x (400 uphill at 5K effort + 400 flat @ {T/400})\n2min jog between\n2mi CD"},
+  {c:"hills",n:"Rolling long run",t:"14mi on a hilly route, steady effort on the climbs"},
+  {c:"hills",n:"Downhill strides",t:"Easy 5mi + 6 x 100m on a gentle downhill, quick and light"},
+  // fartlek
+  {c:"fartlek",n:"1 min on/off",t:"Easy with 6 x 1min on/off",mine:1},
+  {c:"fartlek",n:"4-3-2-1",t:"4-3-2-1 min hard / equal easy float",mine:1},
+  {c:"fartlek",n:"Mona fartlek",t:"2mi WU\n2 x 90s, 4 x 60s, 4 x 30s, 4 x 15s\non/off, equal time (20min)\n2mi CD"},
+  {c:"fartlek",n:"Kenyan fartlek",t:"2mi WU\n10 x 2min on / 1min off\n2mi CD"},
+  {c:"fartlek",n:"Pyramid",t:"2mi WU\n1-2-3-4-3-2-1 min hard, half that time easy\n2mi CD"},
+  {c:"fartlek",n:"Landmark fartlek",t:"40min run, surge to the next landmark whenever you feel like it"},
+  {c:"fartlek",n:"Threshold floats",t:"2mi WU\n5 x (3min @ {T} / 2min @ {MP})\n2mi CD"},
+  // marathon pace
+  {c:"mp",n:"MP miles",t:"4 x 1mi @ {MP}, 90s rest",mine:1},
+  {c:"mp",n:"3 x 2mi MP",t:"3mi WU\n3 x 2mi @ {MP}\n3mi CD",mine:1},
+  {c:"mp",n:"2 x 4mi MP-HMP",t:"3mi WU\n2 x 4mi @ {MP}–{HMP}, 1mi rest\n3mi CD",mine:1},
+  {c:"mp",n:"8 x 1mi MP-HMP",t:"4mi WU\n8 x 1mi @ {MP}–{HMP}, 2min rest\n4mi CD",mine:1},
+  {c:"mp",n:"2 x 6mi MP",t:"2mi WU\n2 x 6mi @ {MP}, 5min rest\n2mi CD",mine:1},
+  {c:"mp",n:"10 with 5 at MP",t:"10mi with 5mi @ {MP}",mine:1},
+  {c:"mp",n:"MP alternations",t:"2mi WU\n8mi alternating 1mi @ {MP} / 1mi @ {T}\n2mi CD"},
+  // long runs
+  {c:"long",n:"20 with 14 at MP",t:"20mi with 14mi @ {MP}\n3mi WU, 3mi CD",mine:1},
+  {c:"long",n:"16 with progression",t:"16mi with 8mi progression from {MP} down to {HMP}",mine:1},
+  {c:"long",n:"16 with 2 x 4mi",t:"16mi with 2 x 4mi @ {MP}–{HMP}, 5min rest",mine:1},
+  {c:"long",n:"16 with 4min surges",t:"16mi with 6 x 4min @ {HMP}, 1min rest",mine:1},
+  {c:"long",n:"16 with tempo",t:"16mi with 6mi @ {T}",mine:1},
+  {c:"long",n:"Easy 16",t:"Easy 16mi",mine:1},
+  {c:"long",n:"20 easy",t:"20mi easy",mine:1},
+  {c:"long",n:"Fast finish",t:"16mi easy, last 3mi @ {MP}"},
+  {c:"long",n:"Progression long run",t:"18mi: 12mi easy, then 6mi from {MP} down to {HMP}"},
+  // easy & recovery
+  {c:"easy",n:"Easy",t:"Easy"},
+  {c:"easy",n:"Easy + strides",t:"Easy + strides"},
+  {c:"easy",n:"Recovery run",t:"Recovery 4-5mi, very easy ({E})"},
+  {c:"easy",n:"Rest",t:"Rest"},
+  {c:"easy",n:"Cross-train",t:"Off / cross-train 40min"},
+  {c:"easy",n:"Pre-race shakeout",t:"Shakeout 3mi + strides\nTypical pre-race",mine:1},
+].map((x,i)=>Object.assign({id:"t"+i},x));
+const catName=c=>(TPL_CATS.find(x=>x[0]===c)||[,""])[1];
+const libOn=()=>S.libOpen&&S.page==="plan"&&!RO()&&!!P();
+function renderLib(){
+  let el=$("#lib");
+  if(!libOn()){if(el)el.remove();document.body.classList.remove("lib-open");return}
+  if(!el){el=document.createElement("aside");el.id="lib";el.className="lib";el.setAttribute("aria-label","Workout library");document.body.appendChild(el)}
+  document.body.classList.add("lib-open");
+  const tb=$("#topbar");el.style.top=(tb?tb.getBoundingClientRect().bottom:0)+"px";
+  const Pc=paces(P()),qv=(S.libQ||"").trim().toLowerCase(),cat=S.libCat||"all";
+  const hit=x=>(cat==="all"||x.c===cat)&&(!qv||(x.n+" "+x.t+" "+catName(x.c)).toLowerCase().includes(qv));
+  const list=TEMPLATES.filter(hit);
+  const card=x=>`<li class="tpl c-${x.c}${S.placeTpl===x.id?" placing":""}" draggable="true" data-tpl="${x.id}" title="Drag onto a day">
+      <div class="tpl-top"><b>${esc(x.n)}</b><span>${x.mine?'<span class="yours" title="From your 2026 Chicago plan">Yours</span> ':""}<button type="button" class="pl" data-act="tpl-place" data-tpl="${x.id}">${S.placeTpl===x.id?"Cancel":"Place"}</button></span></div>
+      <div class="tx">${resolveText(x.t,Pc)}</div></li>`;
+  const body=cat==="all"&&!qv?TPL_CATS.map(([k,l])=>{const xs=list.filter(x=>x.c===k);return xs.length?`<li class="lib-sec">${l}</li>${xs.map(card).join("")}`:""}).join(""):list.map(card).join("")||`<li class="hint">No workouts match “${esc(S.libQ)}”.</li>`;
+  const keepScroll=el.querySelector(".lib-list")?el.querySelector(".lib-list").scrollTop:0,hadFocus=document.activeElement&&document.activeElement.id==="lib-q";
+  el.innerHTML=`<div class="lib-h"><h2>Workout library</h2><button type="button" class="btn ghost" data-act="lib-toggle" aria-label="Close workout library">Close</button></div>
+    <input type="search" class="lib-q" id="lib-q" placeholder="Search workouts" value="${esc(S.libQ||"")}" aria-label="Search workouts">
+    <div class="lib-cats" role="group" aria-label="Workout type"><button type="button" data-act="lib-cat" data-cat="all" aria-pressed="${cat==="all"}">All</button>${TPL_CATS.map(([k,l])=>`<button type="button" class="c-${k}" data-act="lib-cat" data-cat="${k}" aria-pressed="${cat===k}">${l}</button>`).join("")}</div>
+    <ul class="lib-list">${body}</ul>
+    <div class="lib-foot">Drag a workout onto a day to replace it. On a phone or tablet, tap Place, then tap a day. Paces follow this plan's ${esc(P().goal)} goal.</div>`;
+  el.querySelector(".lib-list").scrollTop=keepScroll;
+  if(hadFocus){const q=$("#lib-q");q.focus();q.setSelectionRange(q.value.length,q.value.length)}
+}
+function applyTemplate(tid,wi,di){
+  const x=TEMPLATES.find(t=>t.id===tid),p=P();if(!x||!p||!p.weeks[wi])return;
+  const old=p.weeks[wi].days[di];
+  p.weeks[wi].days[di]=x.t;touch();
+  const refresh=()=>{const el=$(`.day[data-w="${wi}"][data-d="${di}"]`);if(el){const tmp=document.createElement("div");tmp.innerHTML=dayCell(p,wi,di,paces(p),el.dataset.v);el.replaceWith(tmp.firstElementChild)}if(S.view==="day")renderCal()};
+  refresh();
+  const d=addDays(mondayOf(toD(p.start)),wi*7+di);
+  toast(`${x.n} → ${DAYS[di]} ${fmtD(d)}`,{label:"Undo",fn:()=>{p.weeks[wi].days[di]=old;touch();refresh()}});
+}
+function stopPlacing(){S.placeTpl=null;document.body.classList.remove("placing");renderLib()}
+document.addEventListener("input",e=>{if(e.target.id==="lib-q"){S.libQ=e.target.value;renderLib()}});
+window.addEventListener("resize",()=>{const el=$("#lib"),tb=$("#topbar");if(el&&tb)el.style.top=tb.getBoundingClientRect().bottom+"px"});
 
 /* ---------- athletes ---------- */
 function newAthlete(name){
