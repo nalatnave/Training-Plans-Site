@@ -18,6 +18,7 @@
   --easy:#2E8B7E; --easy-soft:#E1F1EE; --medium:#C08516; --medium-soft:#F7EDD8;
   --hard:#9C2F45; --hard-soft:#F4E0E4; --taper:#6F7F92; --taper-soft:#E7ECF1; --race:#132030; --race-soft:#DCE3EA;
   --focus:#2F6FD6; --strava:#E34402;
+  --a0:#3767D0; --a1:#B0437A; --a2:#2D8A57; --a3:#BD7410; --a4:#6A52C4; --a5:#16818F;
   --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -28,13 +29,15 @@
   --accent:#EE6A4C; --accent-ink:#1A0E0A; --accent-soft:#3A221D;
   --easy:#5CC2B2; --easy-soft:#173330; --medium:#E3AA45; --medium-soft:#362B16;
   --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
-  --focus:#7AA7F0; --strava:#FF7A3D; color-scheme:dark}}
+  --focus:#7AA7F0; --strava:#FF7A3D;
+  --a0:#7EA2F2; --a1:#E58AB7; --a2:#6ACB92; --a3:#EDB25A; --a4:#A994F0; --a5:#5CC7D3; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#0F151C; --surface:#17202A; --sunk:#1C2631; --ink:#E5EBF1; --muted:#93A1B0; --line:#2A3644;
   --accent:#EE6A4C; --accent-ink:#1A0E0A; --accent-soft:#3A221D;
   --easy:#5CC2B2; --easy-soft:#173330; --medium:#E3AA45; --medium-soft:#362B16;
   --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
-  --focus:#7AA7F0; --strava:#FF7A3D; color-scheme:dark}
+  --focus:#7AA7F0; --strava:#FF7A3D;
+  --a0:#7EA2F2; --a1:#E58AB7; --a2:#6ACB92; --a3:#EDB25A; --a4:#A994F0; --a5:#5CC7D3; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -152,6 +155,94 @@ details[open].card summary h2::before{content:"▾ "}
 .pz{font-family:var(--f-mono);font-size:12.5px;background:var(--ts);color:var(--ink);border-radius:3px;padding:0 3px;white-space:nowrap}
 .day textarea{width:100%;min-height:70px;resize:vertical;margin-top:3px;font-size:14px;line-height:1.4;padding:5px 6px;border-color:var(--focus)}
 
+/* sections */
+.tabs{display:inline-flex;gap:2px;background:var(--sunk);border:1px solid var(--line);border-radius:7px;padding:2px}
+.tabs button{border:0;background:transparent;padding:5px 14px;border-radius:5px;font-weight:600;cursor:pointer;color:var(--muted);font-size:14px}
+.tabs button[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.tabs .dot{color:var(--accent)}
+
+/* team */
+.page-h{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;padding-block:26px 14px}
+.page-h h1{font-family:var(--f-display);font-weight:700;font-size:clamp(32px,5vw,48px);line-height:1;margin:0}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.acard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;gap:8px;align-content:start}
+.aname{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.1}
+.adot{width:11px;height:11px;border-radius:50%;background:var(--ac);flex:none}
+.ameta{font-size:13px;color:var(--muted)}
+.ameta b{color:var(--ink);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.cc{font-size:12px;border-radius:999px;padding:1px 9px;background:var(--sunk);border:1px solid var(--line);white-space:nowrap}
+.cc.sev-sore{border-color:var(--medium);color:var(--medium)}
+.cc.sev-painful{border-color:var(--hard);color:var(--hard);font-weight:600}
+.tpill{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:4px;padding:1px 6px;background:var(--ts);color:var(--tc)}
+.t-Easy{--tc:var(--easy);--ts:var(--easy-soft)} .t-Medium{--tc:var(--medium);--ts:var(--medium-soft)} .t-Hard{--tc:var(--hard);--ts:var(--hard-soft)} .t-Taper{--tc:var(--taper);--ts:var(--taper-soft)} .t-Race{--tc:var(--race);--ts:var(--race-soft)}
+.acard .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.wknav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wknav .lbl{font-family:var(--f-display);font-weight:700;font-size:20px;min-width:170px;text-align:center}
+.ovl{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:6px}
+.ovl li{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 12px;font-size:14px}
+.ovl .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-right:8px}
+.ovl .who{color:var(--muted)}
+.tw-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table.tw{border-collapse:collapse;width:100%;min-width:940px;table-layout:fixed}
+.tw th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--line);font-weight:600;vertical-align:bottom}
+.tw th .cnt{display:block;text-transform:none;letter-spacing:0;font-weight:600;color:var(--accent);font-size:12px}
+.tw th:first-child{width:180px}
+.tw th.today{background:var(--accent-soft)}
+.tw td{vertical-align:top;padding:8px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);font-size:13px;cursor:pointer;min-width:0}
+.tw tr:last-child td{border-bottom:0}
+.tw td:hover{background:var(--sunk)}
+.tw td.ath{cursor:default;border-left:0;background:var(--surface)}
+.tw td.ath .aname{font-size:18px}
+.tw td.ath .aname button{all:unset;cursor:pointer}
+.tw td.ath .aname button:hover{text-decoration:underline}
+.tw td.ath .aname button:focus-visible{outline:2px solid var(--focus)}
+.tw td .dt{white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.tw td.k-work .dt{font-weight:500}
+.tw td.k-easy .dt,.tw td.k-rest .dt,.tw td.k-empty .dt{color:var(--muted)}
+.tw td.k-race .dt{font-family:var(--f-display);font-weight:700;font-size:16px;text-transform:uppercase}
+.tw td.none{background:var(--sunk);cursor:default;color:var(--muted);font-size:12px}
+.tw td.shared{box-shadow:inset 0 0 0 2px var(--accent)}
+.sch{font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.sch b{color:var(--ink);font-weight:600}
+.pt{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--easy);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-top:5px;margin-right:4px;vertical-align:middle}
+
+/* athlete profile */
+.back{background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-weight:600;font-size:14px}
+.back:hover{color:var(--ink)}
+.ath-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:16px;align-items:start}
+.stack{display:grid;gap:16px}
+.areas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.area{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px;font-weight:500}
+.area:hover{border-color:var(--muted)}
+.area[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.concern{display:grid;grid-template-columns:110px 120px minmax(0,1fr);gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line);margin-top:8px}
+.concern b{font-weight:600}
+.concern select,.concern input{width:100%}
+.ptdays{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 6px}
+.ptd{width:52px;padding:6px 0;border:1px solid var(--line);border-radius:6px;background:var(--surface);cursor:pointer;font-weight:600;text-align:center;font-size:13px}
+.ptd .k{display:block;font-size:10px;font-weight:500;color:var(--muted)}
+.ptd[aria-pressed="true"]{background:var(--easy);border-color:var(--easy);color:var(--paper)}
+.ptd[aria-pressed="true"] .k{color:var(--paper)}
+.exgroup{margin-top:14px}
+.exgroup h3{font-size:15px;margin:0 0 6px;display:flex;gap:8px;align-items:center}
+.exlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.exlist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 10px;background:var(--sunk);border-radius:6px;font-size:14px}
+.exlist .dose{font-family:var(--f-mono);font-size:12px;color:var(--muted);grid-column:1/-1}
+.exlist .when{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--easy);white-space:nowrap}
+.exlist li.held{opacity:.6}
+.exlist li.held .when{color:var(--hard)}
+.fine{font-size:13px;color:var(--muted);margin:12px 0 0}
+.warn{background:var(--hard-soft);border-radius:6px;padding:10px 12px;font-size:14px;margin-top:10px}
+.plist{list-style:none;margin:8px 0 12px;padding:0;display:grid;gap:6px}
+.plist li{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 10px;background:var(--sunk);border-radius:6px;flex-wrap:wrap}
+.notes-in{width:100%;min-height:70px;resize:vertical}
+.ptbox{margin-top:12px}
+.ptbox h3{font-family:var(--f-display);font-size:19px;text-transform:uppercase;margin:0 0 8px}
+.schrow{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:6px;margin-top:6px}
+.schrow label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px}
+.schrow input{width:100%;font-size:13px;padding:5px 6px}
+
 /* Strava links */
 .sv{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:12px;font-weight:600;color:var(--strava);text-decoration:none;border:1px solid currentColor;border-radius:4px;padding:1px 6px}
 .sv:hover{background:var(--strava);color:#fff}
@@ -257,6 +348,10 @@ textarea.io{width:100%;min-height:90px;font-family:var(--f-mono);font-size:12px;
   .day textarea{grid-column:2}
   .stat{flex-basis:45%}
   .mhead,.mrow{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .ath-grid{grid-template-columns:minmax(0,1fr)}
+  .concern{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .concern input{grid-column:1/-1}
+  .tabs button{padding:5px 10px}
   .mhead span:last-child{display:none}
   .mrow .day{min-height:64px;padding:4px 5px;border-bottom:0;display:block;border-right:1px solid var(--line)}
   .mrow .dt{font-size:10.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -471,7 +566,7 @@ function resize(plan){
 }
 function newPlan(o={}){
   const race=o.raceDate||iso(addDays(todayD(),7*18));
-  const p={name:o.name||"New marathon block",athlete:o.athlete||"",race:o.race||"",dist:+o.dist||26.2188,
+  const p={name:o.name||"New marathon block",athleteId:o.athleteId||null,athlete:o.athlete||"",race:o.race||"",dist:+o.dist||26.2188,
     start:o.start||iso(addDays(mondayOf(toD(race)),-7*17)),raceDate:race,goal:o.goal||"2:45:00",
     settings:Object.assign({startMiles:50,peakMiles:80,step:6,qualityDay:2,longDay:5},o.settings||{}),weeks:[],updatedAt:Date.now()};
   return generate(p);
@@ -479,17 +574,21 @@ function newPlan(o={}){
 
 /* ---------- store: shared plan library (db), falling back to this browser ---------- */
 function lsGetEarly(k){try{return localStorage.getItem(k)}catch(e){return null}}
-const S={draft:null,unsaved:false,view:lsGetEarly("blockbuilder.view")||"week",dayIdx:null,mode:"loading",col:null,plans:{},cur:null,dirty:new Set(),timers:{},writing:{},again:{},editing:null,remotePending:false};
-const LS="blockbuilder.plans.v1";
+const S={athletes:{},page:lsGetEarly("blockbuilder.page")||"team",teamWeek:null,athSel:lsGetEarly("blockbuilder.ath"),draft:null,unsaved:false,view:lsGetEarly("blockbuilder.view")||"week",dayIdx:null,mode:"loading",col:null,plans:{},cur:null,dirty:new Set(),timers:{},writing:{},again:{},editing:null,remotePending:false};
+const LS="blockbuilder.plans.v1",LSA="blockbuilder.athletes.v1";
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const RO=()=>S.mode==="snapshot";
 function status(t,err){S.statusText=t;S.statusErr=!!err;const el=$("#status");if(!el)return;el.textContent=t;el.classList.toggle("err",!!err)}
 function renderTop(){
+  const onTeam=S.page!=="plan";
+  const tabs=`<nav class="tabs" aria-label="Sections"><button type="button" data-act="page" data-page="team" aria-current="${onTeam?"page":"false"}">Team</button><button type="button" data-act="page" data-page="plan" aria-current="${onTeam?"false":"page"}">Plans${S.unsaved?' <span class="dot" title="Unsaved changes">•</span>':""}</button></nav>`;
+  const teamCtl=RO()?'<span class="badge">Read-only copy</span>':S.mode==="loading"?"":'<button class="btn" data-act="add-athlete">+ Add athlete</button>';
   $("#topbar").innerHTML=`<div class="top-in">
     <div class="brand">Block<b>/</b>Builder</div>
-    <select id="planSel" aria-label="Open a plan"></select>
-    ${RO()?'<span class="badge">Read-only copy</span>':S.mode==="loading"?"":`<button class="btn${S.unsaved?" primary":""}" id="saveBtn" data-act="save"${S.unsaved?"":" disabled"} title="Save (⌘/Ctrl+S)">Save</button><button class="btn" data-act="save-as">Save as…</button><button class="btn ghost" id="discardBtn" data-act="discard"${S.unsaved?"":" hidden"}>Discard changes</button><button class="btn" data-act="new">+ New plan</button>`}
+    ${tabs}
+    ${onTeam?teamCtl:`<select id="planSel" aria-label="Open a plan"></select>
+    ${RO()?'<span class="badge">Read-only copy</span>':S.mode==="loading"?"":`<button class="btn${S.unsaved?" primary":""}" id="saveBtn" data-act="save"${S.unsaved?"":" disabled"} title="Save (⌘/Ctrl+S)">Save</button><button class="btn" data-act="save-as">Save as…</button><button class="btn ghost" id="discardBtn" data-act="discard"${S.unsaved?"":" hidden"}>Discard changes</button><button class="btn" data-act="new">+ New plan</button>`}`}
     <span class="status${S.statusErr?" err":""}" id="status">${esc(S.statusText||"Loading plans…")}</span></div>`;
   renderSelect();
 }
@@ -501,8 +600,15 @@ async function initStore(){
   let db=null;
   try{db=window.claude&&window.claude.use?await window.claude.use("db"):null}catch(e){db=null}
   if(db){
-    S.mode="db";S.col=db.collection("plans");
-    S.col.onSnapshot(snap=>{
+    S.mode="db";S.db=db;S.col=db.collection("plans");
+    db.collection("athletes").onSnapshot(snap=>{
+      const next={};snap.docs.forEach(d=>{const x=d.data();if(x)next[d.id]=Object.assign(x,{id:d.id})});
+      for(const id in S.athletes)if(S.athPending&&S.athPending.has(id))next[id]=S.athletes[id];
+      S.athletes=next;S.athLoaded=true;
+      afterLoad(false);
+      if(S.page!=="plan"&&!typingInApp())render();
+    },err=>status("Couldn't reach the athlete list: "+(err&&err.message||"try reloading"),true));
+    S.col.onSnapshot(snap=>{S.plansLoaded=true;
       const seen=new Set();let curChanged=false;
       snap.docs.forEach(doc=>{
         seen.add(doc.id);
@@ -522,11 +628,13 @@ async function initStore(){
   }else if(!STANDALONE&&SNAP&&SNAP.plans&&Object.keys(SNAP.plans).length){
     S.mode="snapshot";
     for(const id in SNAP.plans)S.plans[id]=Object.assign(clone(SNAP.plans[id]),{id});
+    for(const id in (SNAP.athletes||{}))S.athletes[id]=Object.assign(clone(SNAP.athletes[id]),{id});
     status("Updated "+fmtStamp(SNAP.updatedAt));
     renderTop();afterLoad(true);
   }else{
     S.mode="local";
     try{const raw=JSON.parse(lsGet(LS)||"{}");for(const id in raw)S.plans[id]=Object.assign(raw[id],{id})}catch(e){}
+    try{const raw=JSON.parse(lsGet(LSA)||"{}");for(const id in raw)S.athletes[id]=Object.assign(raw[id],{id})}catch(e){}
     // first visit to the standalone site: start from the plans bundled with the page
     if(STANDALONE&&!Object.keys(S.plans).length&&SNAP&&SNAP.plans&&lsGet("blockbuilder.seeded")===null){
       for(const id in SNAP.plans)S.plans[id]=Object.assign(clone(SNAP.plans[id]),{id});
@@ -543,9 +651,9 @@ async function publishSnapshot(btn){
   const fail=msg=>{btn.disabled=false;btn.textContent="Update public copy";const n=$("#pub-note");if(n)n.textContent=msg};
   let art=null;try{art=window.claude&&window.claude.use?await window.claude.use("artifact"):null}catch(e){}
   if(!art)return fail("Updating the public copy isn't available in this view. Open the page on claude.ai while signed in.");
-  const plans={};for(const id in S.plans)plans[id]=stripId(S.plans[id]);
+  const plans={},athletes={};for(const id in S.plans)plans[id]=stripId(S.plans[id]);for(const id in S.athletes)athletes[id]=stripId(S.athletes[id]);
   try{
-    await art.publish(buildPage({updatedAt:Date.now(),plans}));
+    await art.publish(buildPage({updatedAt:Date.now(),plans,athletes}));
     toast("Public copy updated. Reloading…");
   }catch(e){
     const c=e&&e.code;
@@ -634,10 +742,13 @@ async function removePlan(id){
 }
 function addPlan(p){
   p.id=p.id||uid();p.updatedAt=Date.now();
-  S.plans[p.id]=clone(p);S.dirty.add(p.id);flush(p.id);
-  setCurrent(p.id);render();
+  S.plans[p.id]=clone(p);
+  ensureAthletes();
+  S.dirty.add(p.id);flush(p.id);
+  setCurrent(p.id);S.page="plan";lsSet("blockbuilder.page","plan");render();
 }
 function afterLoad(curChanged){
+  if(S.mode!=="db"||(S.athLoaded&&S.plansLoaded))ensureAthletes();
   const ids=Object.keys(S.plans);
   if(!S.cur||!S.plans[S.cur]){
     const want=lsGet("blockbuilder.cur");
@@ -653,7 +764,9 @@ const P=()=>S.draft;
 function renderSelect(){
   const sel=$("#planSel");if(!sel)return;const ids=Object.keys(S.plans).sort((a,b)=>(S.plans[a].raceDate<S.plans[b].raceDate?1:-1));
   const nm=id=>id===S.cur&&S.draft?S.draft:S.plans[id];
-  sel.innerHTML=ids.length?ids.map(id=>`<option value="${id}"${id===S.cur?" selected":""}>${esc(nm(id).name||"Untitled plan")} · ${esc(nm(id).raceDate||"")}${id===S.cur&&S.unsaved?" (unsaved)":""}</option>`).join(""):`<option>No plans yet</option>`;
+  const opt=id=>`<option value="${id}"${id===S.cur?" selected":""}>${esc(nm(id).name||"Untitled plan")} · ${esc(nm(id).raceDate||"")}${id===S.cur&&S.unsaved?" (unsaved)":""}</option>`;
+  const groups={};ids.forEach(id=>{const g=athleteName(nm(id))||"No athlete";(groups[g]=groups[g]||[]).push(id)});
+  sel.innerHTML=ids.length?Object.keys(groups).sort().map(g=>`<optgroup label="${esc(g)}">${groups[g].map(opt).join("")}</optgroup>`).join(""):`<option>No plans yet</option>`;
   sel.disabled=!ids.length;
 }
 function stats(p,Pc){
@@ -704,7 +817,7 @@ function dayCell(p,wi,di,Pc,v="w"){
     :`<span>${DAYS[di]}</span><span class="num">${d.getUTCDate()}</span>`;
   return `<div class="day k-${k}${RO()?" ro":""}${isToday?" today":""}" data-w="${wi}" data-d="${di}" data-v="${v}"${RO()?"":(v==="d"?"":' draggable="true"')+' tabindex="0"'} aria-label="${DAYS_LONG[di]} ${fmtD(d)}: ${esc(t?plainText(t,Pc):"empty")}${RO()?"":". Press Enter to edit."}">
     <div class="dl">${lbl}</div>
-    <div class="dt">${t?resolveText(t,Pc):"—"}</div>${linkOf(w,di)?`<a class="sv" href="${esc(linkOf(w,di))}" target="_blank" rel="noopener" title="Open this run on Strava">${v==="m"?"Strava ↗":"View on Strava ↗"}</a>`:""}</div>`;
+    <div class="dt">${t?resolveText(t,Pc):"—"}</div>${schedHTML(schedOf(w,di))}${ptDaysFor(p,wi).includes(di)?`<span class="pt" title="${esc(ptTitle(p))}">PT</span>`:""}${linkOf(w,di)?`<a class="sv" href="${esc(linkOf(w,di))}" target="_blank" rel="noopener" title="Open this run on Strava">${v==="m"?"Strava ↗":"View on Strava ↗"}</a>`:""}</div>`;
 }
 const typeSelect=(wi,w)=>`<select data-wf="type" data-w="${wi}"${RO()?" disabled":""} aria-label="Week ${wi+1} type" title="Changing the type swaps in workbook workouts of that type">${TYPES.map(t=>`<option${t===w.type?" selected":""}>${t}</option>`).join("")}</select>`;
 function weekHTML(p,wi,Pc,nowIdx){
@@ -762,7 +875,8 @@ function dayHTML(p,Pc){
         <label class="wk-miles"><input type="number" min="0" max="250" step="1" inputmode="numeric" data-wf="miles" data-w="${wi}" id="mi-${wi}"${RO()?" disabled":""} value="${w.miles??""}" placeholder="—"> mi</label></div>
       <div class="days">${dayCell(p,wi,di,Pc,"d")}</div>
     </article>
-    <div class="strip">${chips}</div>`;
+    <div class="strip">${chips}</div>
+    ${ptDayBox(p,wi,di)}`;
 }
 function calHTML(p,Pc,nowIdx){
   if(S.view==="month")return monthHTML(p,Pc);
@@ -784,6 +898,9 @@ function nowIndex(p){const i=Math.floor((todayD()-mondayOf(toD(p.start)))/DAY_MS
 
 function render(){
   S.remotePending=false;
+  renderTop();
+  if(S.page==="team")return renderTeam();
+  if(S.page==="athlete")return renderAthlete();
   const app=$("#app"),p=P();
   if(!p){
     app.innerHTML=`<div class="empty"><p class="eyebrow">Plan library</p><h1>No training plans yet</h1>
@@ -796,10 +913,10 @@ function render(){
   const startSnap=iso(mondayOf(toD(p.start)))!==p.start;
   app.innerHTML=`
   <section class="head">
-    <span class="eyebrow">${esc(p.athlete?p.athlete+" · ":"")}${p.dist<20?"Half marathon":"Marathon"} block</span>
+    <span class="eyebrow">${esc(athleteName(p)?athleteName(p)+" · ":"")}${p.dist<20?"Half marathon":"Marathon"} block</span>
     <input class="title-in" id="f-name" data-f="name" value="${esc(p.name)}"${RO()?" readonly":""} aria-label="Plan name">
     <div class="fields">
-      <div class="field"><label for="f-athlete">Athlete</label><input type="text" id="f-athlete" data-f="athlete"${dis} value="${esc(p.athlete||"")}" placeholder="Name"></div>
+      <div class="field"><label for="f-athlete">Athlete</label><select id="f-athlete" data-f="athleteId"${dis}>${athleteOptions(p.athleteId)}${RO()?"":'<option value="__new">+ New athlete…</option>'}</select></div>
       <div class="field"><label for="f-race">Race</label><input type="text" id="f-race" data-f="race"${dis} value="${esc(p.race||"")}" placeholder="e.g. Chicago Marathon"></div>
       <div class="field"><label for="f-dist">Distance</label><select id="f-dist" data-f="dist"${dis}><option value="26.2188"${p.dist>20?" selected":""}>Marathon</option><option value="13.1094"${p.dist<20?" selected":""}>Half marathon</option></select></div>
       <div class="field"><label for="f-start">Start date</label><input type="date" id="f-start" data-f="start"${dis} value="${p.start}">${startSnap?`<small>Weeks start Mon ${fmtD(mondayOf(toD(p.start)))}</small>`:""}</div>
@@ -941,9 +1058,10 @@ function openEditor(cell){
   dt.replaceWith(ta);
   const row=document.createElement("div");row.className="svrow";
   row.innerHTML=`<label for="sv-${wi}-${di}">Strava activity link</label><input type="url" id="sv-${wi}-${di}" placeholder="strava.com/activities/…" value="${esc(linkOf(p.weeks[wi],di))}">`;
-  ta.after(row);
-  const li=row.querySelector("input");
-  li.addEventListener("keydown",ev=>{
+  const sc=schedOf(p.weeks[wi],di),sch=document.createElement("div");sch.className="schrow";
+  sch.innerHTML=`<div><label for="st-${wi}-${di}">Time</label><input type="time" id="st-${wi}-${di}" value="${esc(sc.t)}"></div><div><label for="sl-${wi}-${di}">Location</label><input type="text" id="sl-${wi}-${di}" list="places-${wi}-${di}" value="${esc(sc.loc)}" placeholder="e.g. Montrose track"><datalist id="places-${wi}-${di}">${allPlaces().map(x=>`<option value="${esc(x)}">`).join("")}</datalist></div>`;
+  ta.after(sch);sch.after(row);
+  for(const li of cell.querySelectorAll(".schrow input,.svrow input"))li.addEventListener("keydown",ev=>{
     if(ev.key==="Escape"){ev.preventDefault();S.editing.cancel=true;li.blur()}
     if(ev.key==="Enter"){ev.preventDefault();li.blur()}
   });
@@ -970,6 +1088,11 @@ function commitEditor(){
       const url=stravaUrl(li.value);
       if(url===null)toast("That isn't a Strava activity link, so it wasn't added. Copy the link from the activity's Share menu.");
       else if(url!==linkOf(w,ed.di)){if(!w.links)w.links=Array(7).fill("");w.links[ed.di]=url;changed=true}
+    }
+    const st=ed.cell.querySelector(".schrow input[type=time]"),sl=ed.cell.querySelector(".schrow input[type=text]");
+    if(st&&sl){
+      const nv={t:st.value||"",loc:sl.value.trim()},ov=schedOf(w,ed.di);
+      if(nv.t!==ov.t||nv.loc!==ov.loc){if(!w.sched)w.sched=Array(7).fill(null);w.sched[ed.di]=nv.t||nv.loc?nv:null;changed=true}
     }
     if(changed)touch(p);
   }
@@ -1014,7 +1137,7 @@ document.addEventListener("drop",e=>{
 document.addEventListener("click",e=>{
   if(e.target.closest&&e.target.closest("a.sv"))return;
   const cell=e.target.closest&&e.target.closest(".day[data-w]");
-  if(cell&&!e.target.closest("textarea,.svrow")&&!(S.editing&&S.editing.cell===cell)){
+  if(cell&&!e.target.closest("textarea,.svrow,.schrow")&&!(S.editing&&S.editing.cell===cell)){
     // on phones the month grid is too small to edit in place: open that day instead
     if(cell.dataset.v==="m"&&window.matchMedia("(max-width:760px)").matches){setView("day",+cell.dataset.w*7+ +cell.dataset.d);return}
     openEditor(cell);return}
@@ -1045,8 +1168,15 @@ document.addEventListener("change",e=>{
     const to=t.value;
     guardUnsaved(()=>{setCurrent(to);S.glConfirm=null;render();window.scrollTo(0,0)});
     return}
+  if(t.dataset.af&&!RO()){const at=S.athletes[S.athSel];if(!at)return;at[t.dataset.af]=t.dataset.af==="name"?(t.value.trim()||at.name):t.value;saveAthlete(at);if(t.dataset.af==="name")renderTop();return}
+  if(t.dataset.cf&&!RO()){const at=S.athletes[S.athSel];const c=at&&(at.concerns||[]).find(x=>x.area===t.dataset.area);if(!c)return;c[t.dataset.cf]=t.value;saveAthlete(at);if(t.dataset.cf==="sev")renderAthlete();return}
+  if(t.id==="team-pick"){if(t.value){S.teamWeek=iso(mondayOf(toD(t.value)));renderTeam()}return}
   if(t.id==="day-pick"){if(t.value){const i=Math.round((toD(t.value)-mondayOf(toD(p.start)))/DAY_MS);if(i>=0&&i<p.weeks.length*7){S.dayIdx=i;renderCal()}}return}
   if(!p||RO())return;
+  if(t.dataset.f==="athleteId"){
+    if(t.value==="__new"){t.value=p.athleteId||"";newAthleteModal(a=>{p.athleteId=a.id;p.athlete=a.name;touch();render()});return}
+    p.athleteId=t.value;p.athlete=(S.athletes[t.value]||{}).name||"";touch();render();return;
+  }
   if(t.dataset.f){
     const f=t.dataset.f;let v=t.value;
     if(f==="dist")v=+v;
@@ -1090,7 +1220,7 @@ function toast(msg,action){
 async function copyText(text,okMsg){
   try{await navigator.clipboard.writeText(text);toast(okMsg);return true}catch(e){return false}
 }
-function exportable(p){const o=stripId(p);o.format="block-builder/1";return o}
+function exportable(p){const o=stripId(p);o.athlete=athleteName(p);o.format="block-builder/1";return o}
 function csv(p){
   const Pc=paces(p),q=s=>`"${String(s??"").replace(/"/g,'""')}"`;
   const rows=[["Week","Week of","Type","Miles",...DAYS_LONG,"Strava links"]];
@@ -1117,7 +1247,8 @@ document.addEventListener("mousedown",e=>{if(e.target.id==="scrim")closeModal()}
 function planForm(title,o,submit){
   modal(`<h3>${title}</h3>
     <div class="field"><label for="m-name">Plan name</label><input type="text" id="m-name" value="${esc(o.name)}"></div>
-    <div class="two"><div class="field"><label for="m-athlete">Athlete</label><input type="text" id="m-athlete" value="${esc(o.athlete||"")}"></div>
+    <div class="two"><div class="field"><label for="m-athlete">Athlete</label><select id="m-athlete">${athleteOptions(o.athleteId)}<option value="__new"${Object.keys(S.athletes).length?"":" selected"}>+ New athlete…</option></select>
+      <input type="text" id="m-athlete-new" placeholder="New athlete's name" style="margin-top:6px"${Object.keys(S.athletes).length?" hidden":""}></div>
     <div class="field"><label for="m-race">Race</label><input type="text" id="m-race" value="${esc(o.race||"")}"></div></div>
     <div class="two"><div class="field"><label for="m-raceDate">Race date</label><input type="date" id="m-raceDate" value="${o.raceDate}"></div>
     <div class="field"><label for="m-goal">Goal time</label><input type="text" id="m-goal" value="${esc(o.goal)}" placeholder="h:mm:ss"></div></div>
@@ -1127,12 +1258,16 @@ function planForm(title,o,submit){
     <p class="hint" id="m-err"></p>
     <div class="acts"><button class="btn ghost" data-act="close">Cancel</button><button class="btn primary" data-act="modal-ok">${o.ok}</button></div>`);
   S.modalSubmit=()=>{
-    const v=id=>$("#m-"+id).value,r={name:v("name").trim()||"Untitled plan",athlete:v("athlete").trim(),race:v("race").trim(),raceDate:v("raceDate"),goal:v("goal").trim(),start:v("start"),dist:+v("dist")};
+    const v=id=>$("#m-"+id).value;
+    let aid=v("athlete");
+    if(aid==="__new"){const nm=v("athlete-new").trim();if(!nm){$("#m-err").textContent="Enter the new athlete's name.";return}const a=newAthlete(nm);saveAthlete(a);aid=a.id}
+    const r={athleteId:aid,athlete:(S.athletes[aid]||{}).name||"",name:v("name").trim()||"Untitled plan",race:v("race").trim(),raceDate:v("raceDate"),goal:v("goal").trim(),start:v("start"),dist:+v("dist")};
     if(o.withMiles)r.settings={startMiles:+v("startMiles")||40,peakMiles:+v("peakMiles")||70};
     const err=!r.raceDate||!r.start?"Choose a start date and a race date.":toD(r.raceDate)<=toD(r.start)?"The race date must be after the start date.":!parseTime(r.goal,r.dist)?"Enter the goal as h:mm:ss, for example 2:45:00.":"";
     if(err){$("#m-err").textContent=err;return}
     closeModal();submit(r);
   };
+  $("#m-athlete").addEventListener("change",e=>{const n=$("#m-athlete-new");n.hidden=e.target.value!=="__new";if(!n.hidden)n.focus()});
   // keep start date following race date (same block length) until the user edits start
   const rd=$("#m-raceDate"),sd=$("#m-start");let touched=false;sd.addEventListener("input",()=>touched=true);
   rd.addEventListener("change",()=>{if(!touched&&rd.value)sd.value=iso(addDays(mondayOf(toD(rd.value)),-7*(o.len-1)))});
@@ -1144,13 +1279,14 @@ function act(a,btn){
     case"new":if(S.unsaved&&!btn.dataset.ok){guardUnsaved(()=>{btn.dataset.ok=1;act("new",btn);delete btn.dataset.ok});break}
     {
       const race=iso(addDays(todayD(),7*20)),len=18;
-      planForm("New plan",{name:"",athlete:p?p.athlete:"",race:"",raceDate:race,goal:p?p.goal:"2:45:00",dist:26.2188,start:iso(addDays(mondayOf(toD(race)),-7*(len-1))),len,startHint:"Set to 18 weeks before race day. You can change it.",withMiles:true,settings:{startMiles:p?p.settings.startMiles:50,peakMiles:p?p.settings.peakMiles:80},ok:"Build plan"},
+      const pre=S.prefAthlete||(p&&p.athleteId);S.prefAthlete=null;
+      planForm("New plan",{name:"",athleteId:pre,race:"",raceDate:race,goal:p?p.goal:"2:45:00",dist:26.2188,start:iso(addDays(mondayOf(toD(race)),-7*(len-1))),len,startHint:"Set to 18 weeks before race day. You can change it.",withMiles:true,settings:{startMiles:p?p.settings.startMiles:50,peakMiles:p?p.settings.peakMiles:80},ok:"Build plan"},
         r=>{const np=newPlan(Object.assign(r,{settings:Object.assign({},p?p.settings:{},r.settings)}));addPlan(np);window.scrollTo(0,0);toast("Plan built from the guideline")});
       break;}
     case"dup":if(S.unsaved&&!btn.dataset.ok){guardUnsaved(()=>{btn.dataset.ok=1;act("dup",btn);delete btn.dataset.ok});break}
     {
       if(!p)return;const len=p.weeks.length,race=iso(addDays(toD(p.raceDate),7*26));
-      planForm("Duplicate for next race",{name:p.name.replace(/\d{4}/,m=>String(+m+1))+(/\d{4}/.test(p.name)?"":" (copy)"),athlete:p.athlete,race:p.race,raceDate:race,goal:p.goal,dist:p.dist,start:iso(addDays(mondayOf(toD(race)),-7*(len-1))),len,startHint:`Keeps the same ${len}-week length. Shorter or longer adds or removes weeks at the start.`,ok:"Create copy"},
+      planForm("Duplicate for next race",{name:p.name.replace(/\d{4}/,m=>String(+m+1))+(/\d{4}/.test(p.name)?"":" (copy)"),athleteId:p.athleteId,race:p.race,raceDate:race,goal:p.goal,dist:p.dist,start:iso(addDays(mondayOf(toD(race)),-7*(len-1))),len,startHint:`Keeps the same ${len}-week length. Shorter or longer adds or removes weeks at the start.`,ok:"Create copy"},
         r=>{
           const np=Object.assign(clone(stripId(p)),r,{settings:clone(p.settings)});
           const oldRace=dow(toD(p.raceDate));
@@ -1161,6 +1297,33 @@ function act(a,btn){
         });
       break;}
     case"publish-snap":publishSnapshot(btn);break;
+    case"page":{if(S.editing)commitEditor();S.page=btn.dataset.page;lsSet("blockbuilder.page",S.page);render();window.scrollTo(0,0);break;}
+    case"add-athlete":newAthleteModal(a=>{S.athSel=a.id;S.page="athlete";render();window.scrollTo(0,0)});break;
+    case"ath-create-ok":{const n=$("#m-ath").value.trim();if(!n){$("#m-err").textContent="Enter a name.";return}const a=newAthlete(n);saveAthlete(a);closeModal();const cb=S.athCb;S.athCb=null;cb&&cb(a);break;}
+    case"open-athlete":S.athSel=btn.dataset.id;lsSet("blockbuilder.ath",S.athSel);S.page="athlete";render();window.scrollTo(0,0);break;
+    case"open-plan":case"open-day":{
+      const id=btn.dataset.plan,go=()=>{if(id!==S.cur)setCurrent(id);S.page="plan";lsSet("blockbuilder.page","plan");
+        if(a==="open-day"){S.view="day";lsSet("blockbuilder.view","day");S.dayIdx=+btn.dataset.i}
+        render();if(a==="open-day"){const c=$("#cal-h");if(c)c.scrollIntoView({block:"start"})}else window.scrollTo(0,0)};
+      if(id!==S.cur)guardUnsaved(go);else go();break;}
+    case"ath-new-plan":S.prefAthlete=btn.dataset.id;act("new",btn);break;
+    case"team-prev":case"team-next":S.teamWeek=iso(addDays(toD(teamWeek()),a==="team-prev"?-7:7));renderTeam();break;
+    case"team-this":S.teamWeek=null;renderTeam();break;
+    case"concern-toggle":{
+      const at=S.athletes[S.athSel],k=btn.dataset.area;if(!at||RO())return;
+      at.concerns=at.concerns||[];
+      const i=at.concerns.findIndex(c=>c.area===k);
+      if(i>=0)at.concerns.splice(i,1);else at.concerns.push({area:k,sev:"watch",note:""});
+      saveAthlete(at);renderAthlete();break;}
+    case"pt-day":{
+      const at=S.athletes[S.athSel],d=+btn.dataset.d;if(!at||RO())return;
+      const cur=at.ptDays?at.ptDays.slice():(S.ptAuto||[]).slice();
+      const i=cur.indexOf(d);if(i>=0)cur.splice(i,1);else cur.push(d);
+      at.ptDays=cur.sort((x,y)=>x-y);saveAthlete(at);renderAthlete();break;}
+    case"pt-auto":{const at=S.athletes[S.athSel];if(!at)return;at.ptDays=null;saveAthlete(at);renderAthlete();break;}
+    case"ath-del":$("#ath-del-area").innerHTML=`<span class="confirm">Remove ${esc(S.athletes[S.athSel].name)}? <button class="btn danger" data-act="ath-del-yes">Remove</button><button class="btn ghost" data-act="ath-del-no">Keep</button></span>`;break;
+    case"ath-del-no":renderAthlete();break;
+    case"ath-del-yes":removeAthlete(S.athSel);S.page="team";render();break;
     case"save":savePlan();break;
     case"discard":discardDraft();break;
     case"save-as":
@@ -1202,15 +1365,250 @@ function act(a,btn){
     case"import-ok":{
       let o;try{o=JSON.parse($("#io-in").value)}catch(e){$("#m-err").textContent="That isn't a plan code. Copy the whole code, including the { and } at each end.";return}
       if(!o||!Array.isArray(o.weeks)||!o.start||!o.raceDate){$("#m-err").textContent="This code is missing weeks or dates. Copy it again from Share & export.";return}
-      delete o.format;delete o.id;
+      delete o.format;delete o.id;delete o.athleteId;
       o.settings=Object.assign({startMiles:50,peakMiles:80,step:6,qualityDay:2,longDay:5},o.settings||{});
-      o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||"")),...(Array.isArray(w.links)?{links:Array.from({length:7},(_,i)=>stravaUrl(w.links[i])||"")}:{})}));
+      o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||"")),...(Array.isArray(w.links)?{links:Array.from({length:7},(_,i)=>stravaUrl(w.links[i])||"")}:{}),...(Array.isArray(w.sched)?{sched:Array.from({length:7},(_,i)=>{const x=w.sched[i];return x&&(x.t||x.loc)?{t:/^\d\d:\d\d$/.test(x.t)?x.t:"",loc:String(x.loc||"").slice(0,80)}:null})}:{})}));
       o.dist=+o.dist||26.2188;o.goal=String(o.goal||"3:00:00");o.name=String(o.name||"Imported plan");
       resize(o);closeModal();guardUnsaved(()=>{addPlan(o);window.scrollTo(0,0);toast("Imported "+o.name)});break;}
     case"del":$("#del-area").innerHTML=`<span class="confirm">Delete “${esc(p.name)}” for everyone? <button class="btn danger" data-act="del-yes">Delete</button><button class="btn ghost" data-act="del-no">Keep</button></span>`;break;
     case"del-no":render();break;
     case"del-yes":{const id=S.cur;S.cur=null;S.draft=null;removePlan(id).then(()=>afterLoad(true));break;}
   }
+}
+
+/* ---------- athletes ---------- */
+function newAthlete(name){
+  const used=Object.values(S.athletes).map(a=>a.color);
+  let color=0;while(used.includes(color)&&color<5)color++;
+  return{id:"a_"+Math.random().toString(36).slice(2,10),name,notes:"",concerns:[],ptDays:null,color,updatedAt:Date.now()};
+}
+function saveLocalAthletes(){const o={};for(const id in S.athletes)o[id]=stripId(S.athletes[id]);lsSet(LSA,JSON.stringify(o))}
+async function saveAthlete(a){
+  if(RO())return;
+  a.updatedAt=Date.now();S.athletes[a.id]=a;
+  S.athPending=S.athPending||new Set();S.athPending.add(a.id);
+  try{
+    if(S.mode==="db")await S.db.collection("athletes").doc(a.id).set(stripId(a));else saveLocalAthletes();
+    if(!S.unsaved)status(savedMsg());
+  }catch(e){status("Not saved: "+(e&&e.message||"try again"),true)}
+  S.athPending.delete(a.id);
+}
+async function removeAthlete(id){
+  delete S.athletes[id];
+  try{if(S.mode==="db")await S.db.collection("athletes").doc(id).delete();else saveLocalAthletes();status("Athlete removed")}
+  catch(e){status("Couldn't remove: "+(e&&e.message||"try again"),true)}
+}
+// Every plan belongs to an athlete; older plans are matched to one by name.
+function ensureAthletes(){
+  for(const id in S.plans){
+    const p=S.plans[id];if(p.athleteId&&S.athletes[p.athleteId])continue;
+    const name=(p.athlete||"").trim()||"Unassigned";
+    let a=Object.values(S.athletes).find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
+    if(!a){a=newAthlete(name);S.athletes[a.id]=a;saveAthlete(a)}
+    p.athleteId=a.id;p.athlete=a.name;
+    if(S.draft&&S.draft.id===id){S.draft.athleteId=a.id;S.draft.athlete=a.name}
+    if(!RO()){S.dirty.add(id);flush(id)}
+  }
+}
+function newAthleteModal(cb){
+  S.athCb=cb;
+  modal(`<h3>Add athlete</h3><div class="field"><label for="m-ath">Name</label><input type="text" id="m-ath" placeholder="e.g. Sam Rivera"></div><p class="hint" id="m-err"></p>
+    <div class="acts"><button class="btn ghost" data-act="close">Cancel</button><button class="btn primary" data-act="ath-create-ok">Add athlete</button></div>`);
+  $("#m-ath").addEventListener("keydown",e=>{if(e.key==="Enter")act("ath-create-ok")});
+}
+const athleteName=p=>{const a=p&&S.athletes[p.athleteId];return a?a.name:(p&&p.athlete)||""};
+const sortedAthletes=()=>Object.values(S.athletes).sort((a,b)=>a.name.localeCompare(b.name));
+function athleteOptions(sel){return sortedAthletes().map(a=>`<option value="${a.id}"${a.id===sel?" selected":""}>${esc(a.name)}</option>`).join("")}
+const planById=id=>id===S.cur&&S.draft?S.draft:S.plans[id];
+function plansOf(aid){return Object.keys(S.plans).map(planById).filter(p=>p&&p.athleteId===aid).sort((a,b)=>a.raceDate<b.raceDate?1:-1)}
+// The plan covering a date (latest race wins if blocks overlap).
+function planOn(aid,date){
+  for(const p of plansOf(aid)){const i=Math.round((date-mondayOf(toD(p.start)))/DAY_MS);if(i>=0&&i<p.weeks.length*7)return{p,wi:Math.floor(i/7),di:i%7}}
+  return null;
+}
+function focusPlan(aid){
+  const t=todayD(),now=planOn(aid,t);if(now)return now;
+  const next=plansOf(aid).filter(p=>mondayOf(toD(p.start))>t).sort((a,b)=>a.start<b.start?-1:1)[0];
+  if(next)return{p:next,wi:0,di:0,upcoming:true};
+  const last=plansOf(aid)[0];return last?{p:last,wi:last.weeks.length-1,di:6,past:true}:null;
+}
+const typingInApp=()=>{const a=document.activeElement;return a&&$("#app")&&$("#app").contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)};
+
+/* ---------- schedule ---------- */
+const schedOf=(w,di)=>(w.sched&&w.sched[di])||{t:"",loc:""};
+function fmtTime(t){if(!t)return"";const [h,m]=t.split(":").map(Number);return `${(h%12)||12}:${String(m).padStart(2,"0")} ${h<12?"AM":"PM"}`}
+function schedHTML(sc){if(!sc.t&&!sc.loc)return"";return `<div class="sch">${sc.t?`<b>${fmtTime(sc.t)}</b>`:""}${sc.t&&sc.loc?" · ":""}${esc(sc.loc)}</div>`}
+function allPlaces(){
+  const set=new Map();
+  for(const id in S.plans)for(const w of planById(id).weeks)for(const x of (w.sched||[]))if(x&&x.loc){const k=x.loc.trim().toLowerCase();if(!set.has(k))set.set(k,x.loc.trim())}
+  return [...set.values()].sort();
+}
+
+/* ---------- PT ---------- */
+// General strength and mobility work for common running niggles. "load" = strength (2 days a week, 48 h apart); "daily" = light, most days.
+const AREAS=[
+  {k:"calves",name:"Calves",ex:[["Straight-knee calf raises","3 × 15, 3 s lowering","load"],["Bent-knee (soleus) calf raises","3 × 15, knee bent about 30°","load"],["Calf stretch, straight and bent knee","2 × 30 s each","daily"]]},
+  {k:"achilles",name:"Achilles",ex:[["Isometric calf-raise hold","5 × 30–45 s","daily"],["Heel drops off a step","3 × 15, straight and bent knee","load"],["Slow heavy calf raises with weight","3 × 8–10, 3 s up and 3 s down","load"]]},
+  {k:"hamstrings",name:"Hamstrings",ex:[["Isometric bridge hold, heels on a bench","4 × 30 s","daily"],["Single-leg Romanian deadlift","3 × 8 each side","load"],["Assisted Nordic hamstring curls","2–3 × 5","load"]]},
+  {k:"hips",name:"Hips & glutes",ex:[["Side-lying hip abduction","3 × 15 each side","load"],["Single-leg glute bridge","3 × 12 each side","load"],["Lateral band walks","2 × 10 steps each way","daily"]]},
+  {k:"itband",name:"IT band",ex:[["Side plank with top-leg lift","3 × 30 s each side","load"],["Lateral step-downs","3 × 10 each side","load"],["Foam roll outer thigh and glutes","60–90 s each side","daily"]]},
+  {k:"knees",name:"Knees",ex:[["Spanish squat or wall-sit hold","5 × 30–45 s","daily"],["Slow step-downs","3 × 10 each side","load"],["Split squats","3 × 8 each side","load"]]},
+  {k:"quads",name:"Quads",ex:[["Split squats","3 × 8 each side","load"],["Step-ups","3 × 10 each side","load"],["Kneeling quad stretch","2 × 30 s each side","daily"]]},
+  {k:"shins",name:"Shins",ex:[["Tibialis raises, back against a wall","3 × 20","load"],["Bent-knee calf raises","3 × 15","load"],["Heel walks","3 × 20 m","daily"]]},
+  {k:"feet",name:"Plantar fascia / feet",ex:[["Calf raises with toes on a rolled towel","3 × 12, 3 s up, 2 s hold, 3 s down","load"],["Short-foot arch holds","3 × 10 × 5 s","daily"],["Roll the foot over a ball","1–2 min each foot","daily"]]},
+  {k:"hipflexors",name:"Hip flexors",ex:[["Kneeling hip flexor stretch","2 × 30 s each side","daily"],["Banded standing knee drives","3 × 10 each side","load"],["Dead bugs","3 × 8 each side","daily"]]},
+  {k:"back",name:"Lower back",ex:[["Bird dogs","3 × 8 each side, 5 s hold","daily"],["Side plank","3 × 30 s each side","load"],["Glute bridge","3 × 12","load"]]},
+  {k:"ankles",name:"Ankles",ex:[["Single-leg balance (eyes closed when easy)","3 × 30 s each side","daily"],["Banded ankle eversion and inversion","3 × 15 each way","load"],["Single-leg calf raises","3 × 12 each side","load"]]},
+];
+const SEV={watch:"Watching",sore:"Sore",painful:"Painful"};
+const areaOf=k=>AREAS.find(x=>x.k===k);
+const concernsOf=a=>(a&&a.concerns||[]).filter(c=>areaOf(c.area));
+function ptTitle(p){const a=S.athletes[p.athleteId];return "PT: "+concernsOf(a).map(c=>areaOf(c.area).name).join(", ")}
+// Strength days from the training week: workout days first, then easy days, at least a day apart;
+// never the long-run day, the day before it, rest days, or the two days before a race.
+function autoPtDays(p,wi){
+  const w=p.weeks[wi];if(!w)return[];
+  const L=+p.settings.longDay,ks=w.days.map(kind),block=new Set([L]);
+  if(L>0)block.add(L-1);
+  let target=2;
+  if(wi===p.weeks.length-1){const r=dow(toD(p.raceDate));for(let d=Math.max(0,r-2);d<7;d++)block.add(d);target=1}
+  ks.forEach((k,d)=>{if(k==="race"||k==="rest")block.add(d)});
+  const score=d=>(ks[d]==="work"?0:1)+(d===L+1?2:0);
+  const picks=[];
+  for(const d of [0,1,2,3,4,5,6].filter(d=>!block.has(d)).sort((x,y)=>score(x)-score(y)||x-y)){
+    if(picks.length>=target)break;if(picks.some(x=>Math.abs(x-d)<2))continue;picks.push(d);
+  }
+  return picks.sort((a,b)=>a-b);
+}
+function ptDaysFor(p,wi){
+  const a=p&&S.athletes[p.athleteId];if(!concernsOf(a).length)return[];
+  if(Array.isArray(a.ptDays)){const w=p.weeks[wi];return a.ptDays.filter(d=>w&&kind(w.days[d])!=="race")}
+  return autoPtDays(p,wi);
+}
+function exItems(a,strengthDay){
+  return concernsOf(a).map(c=>{const ar=areaOf(c.area);
+    const items=ar.ex.filter(([,,t])=>t==="daily"||strengthDay).map(([n,dose,t])=>({n,dose,t,held:t==="load"&&c.sev==="painful"}));
+    return{c,ar,items};
+  }).filter(g=>g.items.length);
+}
+function ptDayBox(p,wi,di){
+  const a=S.athletes[p.athleteId];if(!concernsOf(a).length)return"";
+  if(kind(p.weeks[wi].days[di])==="race")return"";
+  const strength=ptDaysFor(p,wi).includes(di),groups=exItems(a,strength);
+  return `<section class="card ptbox"><div class="card-h"><h3>PT today</h3><span class="hint">${strength?"Strength day":"Light work only"} · <button class="back" data-act="open-athlete" data-id="${a.id}">Edit ${esc(a.name)}'s PT</button></span></div>
+    ${groups.map(g=>`<div class="exgroup"><h3>${esc(g.ar.name)} <span class="cc sev-${g.c.sev}">${SEV[g.c.sev]}</span></h3><ul class="exlist">${g.items.map(x=>`<li class="${x.held?"held":""}"><span>${esc(x.n)}</span><span class="when">${x.held?"Hold until cleared":x.t==="load"?"Strength":"Daily"}</span><span class="dose">${esc(x.dose)}</span></li>`).join("")}</ul></div>`).join("")}</section>`;
+}
+
+/* ---------- team page ---------- */
+function teamWeek(){return S.teamWeek||iso(mondayOf(todayD()))}
+function teamRows(wk){
+  return sortedAthletes().map(a=>({a,days:DAYS.map((_,di)=>{
+    const r=planOn(a.id,addDays(wk,di));if(!r)return null;
+    const w=r.p.weeks[r.wi],t=w.days[r.di]||"";
+    return{p:r.p,wi:r.wi,di:r.di,t,k:kind(t),sch:schedOf(w,r.di),link:linkOf(w,r.di),pt:ptDaysFor(r.p,r.wi).includes(r.di),w};
+  })}));
+}
+// Same place on the same day = shared session; several workouts on a day without one = chance to pair up.
+function overlaps(rows){
+  const out=[],sharedCells=new Set();
+  for(let di=0;di<7;di++){
+    const groups={};
+    rows.forEach(r=>{const c=r.days[di];if(c&&c.sch.loc&&c.k!=="rest"){const k=c.sch.loc.trim().toLowerCase();(groups[k]=groups[k]||[]).push({a:r.a,c})}});
+    const inShared=new Set();
+    for(const k in groups)if(groups[k].length>1){
+      // show the best-capitalised spelling of the place
+      const loc=groups[k].map(m=>m.c.sch.loc.trim()).sort((x,y)=>(y!==y.toLowerCase())-(x!==x.toLowerCase()))[0];
+      out.push({di,kind:"place",loc,members:groups[k]});
+      groups[k].forEach(m=>{sharedCells.add(m.a.id+":"+di);inShared.add(m.a.id)});
+    }
+    const work=rows.filter(r=>r.days[di]&&r.days[di].k==="work"&&!inShared.has(r.a.id));
+    if(work.length>1)out.push({di,kind:"work",members:work.map(r=>({a:r.a,c:r.days[di]}))});
+  }
+  return{list:out,sharedCells};
+}
+function firstLine(c){return plainText(c.t,paces(c.p)).split("\n")[0]}
+function renderTeam(){
+  const app=$("#app"),aths=sortedAthletes();
+  if(!aths.length){
+    app.innerHTML=`<div class="empty"><p class="eyebrow">Team</p><h1>No athletes yet</h1><p>Add each athlete you coach, then build or assign a plan for them. The team week shows everyone's sessions side by side.</p>
+      <div${RO()?" hidden":""}><button class="btn primary" data-act="add-athlete">Add your first athlete</button></div></div>`;return;
+  }
+  const wk=toD(teamWeek()),rows=teamRows(wk),ov=overlaps(rows),t=todayD();
+  const cards=aths.map(a=>{
+    const f=focusPlan(a.id),w=f&&f.p.weeks[f.wi];
+    const toRace=f?Math.round((toD(f.p.raceDate)-t)/DAY_MS):null;
+    const line=!f?"No plan yet":f.upcoming?`<b>${esc(f.p.name)}</b> starts ${fmtD(toD(f.p.start))}`:f.past?`Last plan: <b>${esc(f.p.name)}</b>`:`<b>${esc(f.p.name)}</b> · ${toRace>0?toRace+" days to race":"race week"}`;
+    const cs=concernsOf(a);
+    return `<article class="acard" style="--ac:var(--a${a.color%6})">
+      <div class="aname"><span class="adot"></span>${esc(a.name)}</div>
+      <div class="ameta">${line}</div>
+      ${f&&!f.upcoming&&!f.past?`<div class="ameta t-${esc(w.type)}">This week: <span class="tpill">${esc(w.type)}</span> ${w.miles??"—"} mi · W${f.wi+1} of ${f.p.weeks.length}</div>`:""}
+      ${cs.length?`<div class="chips">${cs.map(c=>`<span class="cc sev-${c.sev}" title="${esc(c.note||SEV[c.sev])}">${esc(areaOf(c.area).name)}</span>`).join("")}</div>`:""}
+      <div class="btns"><button class="btn" data-act="open-athlete" data-id="${a.id}">Profile & PT</button>${f?`<button class="btn" data-act="open-plan" data-plan="${f.p.id}">Open plan</button>`:RO()?"":`<button class="btn" data-act="ath-new-plan" data-id="${a.id}">Build a plan</button>`}</div>
+    </article>`;
+  }).join("");
+  const counts=DAYS.map((_,di)=>rows.filter(r=>r.days[di]&&r.days[di].k==="work").length);
+  const head=`<tr><th>Athlete</th>${DAYS.map((d,di)=>{const dd=addDays(wk,di);return `<th class="${+dd===+t?"today":""}">${d} ${dd.getUTCDate()}${counts[di]?`<span class="cnt">${counts[di]} workout${counts[di]>1?"s":""}</span>`:""}</th>`}).join("")}</tr>`;
+  const body=rows.map(r=>{
+    const f=r.days.find(Boolean);
+    return `<tr><td class="ath" style="--ac:var(--a${r.a.color%6})"><div class="aname"><span class="adot"></span><button data-act="open-athlete" data-id="${r.a.id}">${esc(r.a.name)}</button></div>
+      ${f?`<div class="ameta t-${esc(f.w.type)}"><span class="tpill">${esc(f.w.type)}</span> ${f.w.miles??"—"} mi</div><div class="ameta">${esc(f.p.name)}</div>`:`<div class="ameta">No plan this week</div>`}</td>
+      ${r.days.map((c,di)=>!c?`<td class="none">—</td>`:`<td class="k-${c.k}${ov.sharedCells.has(r.a.id+":"+di)?" shared":""}" data-act="open-day" data-plan="${c.p.id}" data-i="${c.wi*7+c.di}" title="Open ${esc(r.a.name)}'s ${DAYS_LONG[di]}">
+        <div class="dt">${c.t?resolveText(c.t,paces(c.p)):"—"}</div>${schedHTML(c.sch)}${c.pt?`<span class="pt" title="${esc(ptTitle(c.p))}">PT</span>`:""}${c.link?`<a class="sv" href="${esc(c.link)}" target="_blank" rel="noopener">Strava ↗</a>`:""}</td>`).join("")}</tr>`;
+  }).join("");
+  const ovl=ov.list.length?`<ul class="ovl">${ov.list.map(o=>{
+    const d=addDays(wk,o.di),when=`${DAYS[o.di]} ${fmtD(d)}`;
+    return o.kind==="place"
+      ?`<li><span class="tag">Same place</span><b>${when} · ${esc(o.loc)}</b> <span class="who">— ${o.members.map(m=>`${esc(m.a.name)}${m.c.sch.t?" at "+fmtTime(m.c.sch.t):""} (${esc(firstLine(m.c))})`).join("; ")}</span></li>`
+      :`<li><span class="tag">Workouts</span><b>${when}</b> <span class="who">— ${o.members.map(m=>`${esc(m.a.name)} (${esc(firstLine(m.c))})`).join(", ")}. No shared location set, so they could train together.</span></li>`;
+  }).join("")}</ul>`:`<p class="hint" style="margin:0 0 14px">No overlap this week. Add a time and location to a day and athletes at the same place show up here.</p>`;
+  const end=addDays(wk,6);
+  app.innerHTML=`<div class="page-h"><div><p class="eyebrow">${aths.length} athlete${aths.length>1?"s":""}</p><h1>Team</h1></div></div>
+    <section class="roster">${cards}</section>
+    <div class="sect-h"><h2>Team week</h2>
+      <div class="wknav"><button class="btn" data-act="team-prev" aria-label="Previous week">‹</button><span class="lbl">${fmtD(wk)} – ${fmtD(end)}</span><button class="btn" data-act="team-next" aria-label="Next week">›</button>
+      <button class="btn ghost" data-act="team-this">This week</button><input type="date" id="team-pick" aria-label="Go to week" value="${iso(wk)}"></div></div>
+    ${ovl}
+    <div class="tw-scroll"><table class="tw"><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    <p class="hint" style="margin-top:8px">Click any day to open it in that athlete's plan, where you can set the time and location.</p>`;
+}
+
+/* ---------- athlete profile ---------- */
+function renderAthlete(){
+  const a=S.athletes[S.athSel],app=$("#app");
+  if(!a){S.page="team";return renderTeam()}
+  const dis=RO()?" disabled":"",plans=plansOf(a.id),f=focusPlan(a.id),cs=concernsOf(a);
+  const auto=f?autoPtDays(f.p,f.wi):[];S.ptAuto=auto;
+  const days=Array.isArray(a.ptDays)?a.ptDays:auto,w=f&&f.p.weeks[f.wi];
+  const kindLbl=d=>{if(!w)return"";const k=kind(w.days[d]);return d===+f.p.settings.longDay&&k!=="rest"?"Long":k==="work"?"Workout":k==="race"?"Race":k==="rest"?"Rest":k==="easy"?"Easy":""};
+  const painful=cs.some(c=>c.sev==="painful");
+  app.innerHTML=`<div class="page-h" style="--ac:var(--a${a.color%6})"><div style="flex:1;min-width:0"><button class="back" data-act="page" data-page="team">‹ Team</button>
+      <div class="aname" style="margin-top:8px"><span class="adot" style="width:14px;height:14px"></span><input class="title-in" id="a-name" data-af="name" value="${esc(a.name)}"${RO()?" readonly":""} aria-label="Athlete name"></div></div></div>
+  <div class="ath-grid">
+    <div class="stack">
+      <section class="card"><h2>Plans</h2>
+        ${plans.length?`<ul class="plist">${plans.map(p=>`<li><span><b>${esc(p.name)}</b><br><span class="hint">${fmtLong(toD(p.raceDate))} · goal ${esc(p.goal)} · ${p.weeks.length} weeks</span></span><button class="btn" data-act="open-plan" data-plan="${p.id}">Open</button></li>`).join("")}</ul>`:`<p class="hint" style="margin:8px 0 12px">No plans yet.</p>`}
+        ${RO()?"":`<button class="btn primary" data-act="ath-new-plan" data-id="${a.id}">New plan for ${esc(a.name)}</button>`}</section>
+      <section class="card"><h2>Notes</h2><textarea class="notes-in" id="a-notes" data-af="notes"${dis} placeholder="Goals, history, how they like to train…" style="margin-top:8px">${esc(a.notes||"")}</textarea></section>
+      <section class="card"><h2>Areas of concern</h2><p class="hint" style="margin-top:4px">Pick any areas to keep an eye on. Each one adds exercises to the PT plan.</p>
+        <div class="areas">${AREAS.map(ar=>`<button type="button" class="area" data-act="concern-toggle" data-area="${ar.k}" aria-pressed="${cs.some(c=>c.area===ar.k)}"${dis}>${esc(ar.name)}</button>`).join("")}</div>
+        ${cs.map(c=>`<div class="concern"><b>${esc(areaOf(c.area).name)}</b>
+          <select data-cf="sev" data-area="${c.area}" aria-label="${esc(areaOf(c.area).name)} status"${dis}>${Object.entries(SEV).map(([k,l])=>`<option value="${k}"${k===c.sev?" selected":""}>${l}</option>`).join("")}</select>
+          <input type="text" data-cf="note" data-area="${c.area}" value="${esc(c.note||"")}" placeholder="Note (e.g. left side, after long runs)" aria-label="${esc(areaOf(c.area).name)} note"${dis}></div>`).join("")}
+      </section>
+      ${RO()?"":`<div id="ath-del-area">${plans.length?`<p class="hint">To remove ${esc(a.name)}, first delete or reassign their plans.</p>`:`<button class="btn danger" data-act="ath-del">Remove athlete</button>`}</div>`}
+    </div>
+    <section class="card"><h2>PT plan</h2>
+      ${!cs.length?`<p class="hint" style="margin-top:8px">Choose an area of concern to see suggested exercises and the days to do them.</p>`:`
+      <p class="hint" style="margin-top:4px">${f?`Strength days for ${f.upcoming?"the first week of":f.past?"the last week of":"this week in"} <b>${esc(f.p.name)}</b>${f.upcoming||f.past?"":` (W${f.wi+1}, ${esc(w.type)})`}.`:"Strength days. Assign a plan to get suggestions from the training week."} ${Array.isArray(a.ptDays)?"You've set these by hand.":"Suggested from the training week."}</p>
+      <div class="ptdays">${DAYS.map((d,i)=>`<button type="button" class="ptd" data-act="pt-day" data-d="${i}" aria-pressed="${days.includes(i)}"${dis}>${d}<span class="k">${kindLbl(i)}</span></button>`).join("")}</div>
+      <p class="hint">${Array.isArray(a.ptDays)?`<button class="btn ghost" data-act="pt-auto"${dis}>Use suggested days</button>`:"Strength goes on workout days first, then easy days, at least a day apart. It stays off the long-run day, the day before it, rest days, and the two days before a race. Tap a day to set your own."}</p>
+      ${painful?`<div class="warn">At least one area is marked painful. Strength exercises for it are on hold. Keep the light daily work only if it doesn't hurt, and have ${esc(a.name)} see a physio before loading it.</div>`:""}
+      ${exItems(a,true).map(g=>`<div class="exgroup"><h3>${esc(g.ar.name)} <span class="cc sev-${g.c.sev}">${SEV[g.c.sev]}</span>${g.c.note?`<span class="hint">${esc(g.c.note)}</span>`:""}</h3>
+        <ul class="exlist">${g.items.map(x=>`<li class="${x.held?"held":""}"><span>${esc(x.n)}</span><span class="when">${x.held?"Hold until cleared":x.t==="load"?"Strength days":"Daily"}</span><span class="dose">${esc(x.dose)}</span></li>`).join("")}</ul></div>`).join("")}
+      <p class="fine">These are general suggestions, not a diagnosis. If pain gets worse, changes how ${esc(a.name)} runs, or lasts more than a week or two, they should see a physiotherapist or doctor.</p>`}
+    </section>
+  </div>`;
 }
 
 /* ---------- share links (standalone site): #plan=<deflated, base64url JSON> ---------- */
@@ -1228,9 +1626,9 @@ async function decodePlan(code){
 }
 function cleanImported(o){
   if(!o||!Array.isArray(o.weeks)||!o.start||!o.raceDate)throw new Error("missing weeks or dates");
-  delete o.format;delete o.id;
+  delete o.format;delete o.id;delete o.athleteId;
   o.settings=Object.assign({startMiles:50,peakMiles:80,step:6,qualityDay:2,longDay:5},o.settings||{});
-  o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||"")),...(Array.isArray(w.links)?{links:Array.from({length:7},(_,i)=>stravaUrl(w.links[i])||"")}:{})}));
+  o.weeks=o.weeks.map(w=>({type:TYPES.includes(w.type)?w.type:"Easy",miles:w.miles==null||w.miles===""?null:+w.miles,days:Array.from({length:7},(_,i)=>String((w.days||[])[i]||"")),...(Array.isArray(w.links)?{links:Array.from({length:7},(_,i)=>stravaUrl(w.links[i])||"")}:{}),...(Array.isArray(w.sched)?{sched:Array.from({length:7},(_,i)=>{const x=w.sched[i];return x&&(x.t||x.loc)?{t:/^\d\d:\d\d$/.test(x.t)?x.t:"",loc:String(x.loc||"").slice(0,80)}:null})}:{})}));
   o.dist=+o.dist||26.2188;o.goal=String(o.goal||"3:00:00");o.name=String(o.name||"Shared plan");
   resize(o);return o;
 }
