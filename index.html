@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <!-- Shared plans: your Supabase settings go on the next line. The app's Team page shows the exact line to paste. -->
-<script>window.BLOCK_BUILDER_SUPABASE={url:"https://rxwdghmkhxpwekfbavxa.supabase.co",anonKey:"sb_publishable_KhmFJFA8Tmdk3gjtjvjmTw_kHV5UAWT"};</script>
+<script>window.BLOCK_BUILDER_SUPABASE={url:"",anonKey:""};</script>
 <title>Marathon Block Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +22,7 @@
   --focus:#2F6FD6; --strava:#E34402;
   --a0:#3767D0; --a1:#B0437A; --a2:#2D8A57; --a3:#BD7410; --a4:#6A52C4; --a5:#16818F;
   --go:#1E8A47; --go-soft:#DCF2E3;
+  --m1:#2a78d6; --m2:#eb6834; --m3:#1baf7a; --m4:#eda100; --m5:#e87ba4; --m6:#008300; --m7:#6250d6; --m8:#e34948;
   --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -34,7 +35,8 @@
   --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
   --focus:#7AA7F0; --strava:#FF7A3D;
   --a0:#7EA2F2; --a1:#E58AB7; --a2:#6ACB92; --a3:#EDB25A; --a4:#A994F0; --a5:#5CC7D3;
-  --go:#5BD68D; --go-soft:#173A26; color-scheme:dark}}
+  --go:#5BD68D; --go-soft:#173A26;
+  --m1:#3987e5; --m2:#d95926; --m3:#199e70; --m4:#c98500; --m5:#d55181; --m6:#008300; --m7:#9085e9; --m8:#e66767; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#0F151C; --surface:#17202A; --sunk:#1C2631; --ink:#E5EBF1; --muted:#93A1B0; --line:#2A3644;
   --accent:#EE6A4C; --accent-ink:#1A0E0A; --accent-soft:#3A221D;
@@ -42,7 +44,8 @@
   --hard:#E0738A; --hard-soft:#3A1D25; --taper:#9AAABD; --taper-soft:#222D39; --race:#E5EBF1; --race-soft:#2A3644;
   --focus:#7AA7F0; --strava:#FF7A3D;
   --a0:#7EA2F2; --a1:#E58AB7; --a2:#6ACB92; --a3:#EDB25A; --a4:#A994F0; --a5:#5CC7D3;
-  --go:#5BD68D; --go-soft:#173A26; color-scheme:dark}
+  --go:#5BD68D; --go-soft:#173A26;
+  --m1:#3987e5; --m2:#d95926; --m3:#199e70; --m4:#c98500; --m5:#d55181; --m6:#008300; --m7:#9085e9; --m8:#e66767; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -217,6 +220,27 @@ table.tw{border-collapse:collapse;width:100%;min-width:940px;table-layout:fixed}
 .sch{font-size:12px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
 .sch b{color:var(--ink);font-weight:600}
 .pt{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--easy);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-top:5px;margin-right:4px;vertical-align:middle}
+
+/* training mix */
+.mix-bar{display:flex;gap:2px;height:22px;background:var(--surface);margin-top:10px}
+.mix-bar span{min-width:2px}
+.mix-bar span:first-child{border-radius:4px 0 0 4px}
+.mix-bar span:last-child{border-radius:0 4px 4px 0}
+.mix-leg{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 16px}
+.mix-leg li{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:14px}
+.mix-leg i{width:12px;height:12px;border-radius:3px}
+.mix-leg b{font-family:var(--f-mono);font-size:13px;font-weight:500}
+.mix-leg small{display:block;color:var(--muted);font-size:12px}
+.mix-leg li.zero{opacity:.45}
+.mix-sum{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:14px;color:var(--muted)}
+.mix-sum b{color:var(--ink);font-weight:600}
+.mix-weeks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(14px,1fr);gap:4px;align-items:end;height:120px;margin-top:14px;padding-bottom:2px;border-bottom:1px solid var(--line)}
+.mix-col{display:flex;flex-direction:column-reverse;gap:2px;height:100%;justify-content:flex-start;cursor:default}
+.mix-col span{display:block;min-height:2px}
+.mix-col span:last-child{border-radius:4px 4px 0 0}
+.mix-col:hover span{filter:brightness(1.08)}
+.mix-wl{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(14px,1fr);gap:4px;font-size:10.5px;color:var(--muted);text-align:center;margin-top:4px}
+.vtip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--paper);font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:6px;max-width:260px;white-space:pre-line}
 
 /* workout library */
 .lib{position:fixed;right:0;bottom:0;width:340px;z-index:24;background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
@@ -770,7 +794,7 @@ function touch(){
   if(RO()||!S.draft)return;
   S.unsaved=true;
   lsSet("blockbuilder.draft",JSON.stringify({id:S.cur,base:S.plans[S.cur]?S.plans[S.cur].updatedAt:null,plan:stripId(S.draft)}));
-  updateSaveUI();
+  updateSaveUI();refreshMix();
 }
 function clearDraft(){lsSet("blockbuilder.draft","")}
 function updateSaveUI(){
@@ -1047,6 +1071,11 @@ function render(){
       ${paceTable(Pc)}
     </section>
   </div>
+
+  <section class="card" style="margin-top:16px" id="mix">
+    <div class="card-h"><h2>Training mix</h2><span class="hint">Share of running days by type. A day with two kinds of work counts half to each.</span></div>
+    <div id="mix-body">${mixHTML(p)}</div>
+  </section>
 
   ${RO()?"":`<details class="card" style="margin-top:16px" id="gl"${S.glOpen?" open":""}>
     <summary><h2>Rough guideline</h2><span class="hint">Rebuild mileage or workouts from your settings</span></summary>
@@ -1518,6 +1547,90 @@ function act(a,btn){
     case"del-yes":{const id=S.cur;S.cur=null;S.draft=null;removePlan(id).then(()=>afterLoad(true));break;}
   }
 }
+
+/* ---------- training mix ---------- */
+// Slot order is fixed (validated palette order); stacked segments follow it.
+const MIX=[["aerobic","Aerobic",1],["mp","Marathon pace",2],["threshold","Threshold",3],["intervals","Intervals",4],["speed","Speed",5],["hills","Hills",6],["fartlek","Fartlek",7],["other","Race & other",8]];
+const MIX_ZONE={MP:"mp",HMP:"threshold",T:"threshold","10K":"intervals","5K":"intervals",MILE:"speed"};
+// Literal paces like "10 x 400 @ 75" or "5x1k @ 3:20" are matched to the nearest training pace for this goal.
+function literalZones(s,Pc){
+  const out=new Set();if(!Pc)return out;
+  const re=/(\d+(?:\.\d+)?)\s*(mi|mile|k|km|m)?\s*@\s*(\d{1,2}:\d{2}|\d{2,3})(?![\d:])/gi;let m;
+  while((m=re.exec(s))){
+    const n=+m[1],u=(m[2]||"").toLowerCase(),t=m[3].includes(":")?(+m[3].split(":")[0])*60+(+m[3].split(":")[1]):+m[3];
+    const meters=u.startsWith("mi")?n*1609.344:u==="k"||u==="km"?n*1000:u==="m"||n>=100?n:n*1609.344;
+    if(!meters||!t)continue;
+    const pace=t/(meters/1609.344);
+    if(pace>Pc.MP+20){out.add("aerobic");continue}
+    let best=null,bd=Infinity;for(const z in MIX_ZONE){const d=Math.abs(Pc[z]-pace);if(d<bd){bd=d;best=z}}
+    out.add(MIX_ZONE[best]);
+  }
+  return out;
+}
+// What kind of training a day's text is. Returns category keys, "rest", or null for an empty day.
+function classifyDay(text,Pc){
+  const s=String(text||"").toLowerCase().trim();
+  if(!s)return null;
+  if(/race day/.test(s))return["other"];
+  if(/^(rest|off)\b/.test(s))return"rest";
+  const c=new Set();
+  if(/\{mile/.test(s)||/mile pace|\bfly|flying|\b150s?\b|x\s*150\b/.test(s))c.add("speed");
+  if(/\{(5k|10k)/.test(s)||/5k pace|10k pace|5k effort|\bcv\b/.test(s))c.add("intervals");
+  if(/\{(t|hmp)[}\/]/.test(s)||/tempo|threshold|\bhmp\b|cruise/.test(s))c.add("threshold");
+  if(/\{mp[}\/]/.test(s)||/\bmp\b|marathon pace/.test(s))c.add("mp");
+  if(/hill/.test(s))c.add("hills");
+  if(/fartlek|on\s*\/\s*off|min on|\d-\d-\d-\d|surge/.test(s))c.add("fartlek");
+  literalZones(s,Pc).forEach(x=>{if(x!=="aerobic")c.add(x)});
+  if(!c.size&&/escalation|progression/.test(s))c.add("mp");
+  if(!c.size&&/\d+\s*x\s*\d/.test(s))c.add("intervals");
+  if(c.size)return[...c];
+  if(/easy|recovery|long run|shakeout|strides|pre-?race|cross|\d+\s*mi\b/.test(s))return["aerobic"];
+  return["other"];
+}
+// Share of running days by type. A day with two kinds of work counts half to each.
+function trainingMix(p){
+  const Pc=paces(p),tot={},weeks=[];let run=0,rest=0,blank=0;
+  MIX.forEach(([k])=>tot[k]=0);
+  p.weeks.forEach((w,wi)=>{
+    const wk={};MIX.forEach(([k])=>wk[k]=0);let wr=0;
+    w.days.forEach(t=>{const c=classifyDay(t,Pc);
+      if(c===null){blank++;return}if(c==="rest"){rest++;return}
+      run++;wr++;c.forEach(k=>{tot[k]+=1/c.length;wk[k]+=1/c.length})});
+    weeks.push({wi,wk,run:wr,type:w.type});
+  });
+  const hard=run-tot.aerobic;
+  return{tot,weeks,run,rest,blank,hard};
+}
+const pct=(x,n)=>{if(!n||!x)return 0;const v=Math.round(x/n*100);return v||"<1"};
+const fmtDays=x=>Number.isInteger(x)?String(x):x.toFixed(1);
+function mixHTML(p){
+  const m=trainingMix(p);
+  if(!m.run)return `<p class="hint" style="margin-top:8px">Add workouts to see how the plan splits between easy running and harder sessions.</p>`;
+  const segs=MIX.filter(([k])=>m.tot[k]>0).map(([k,l,n])=>`<span style="flex:${m.tot[k]};background:var(--m${n})" data-tip="${esc(l)}: ${pct(m.tot[k],m.run)}% · ${fmtDays(m.tot[k])} of ${m.run} running days"></span>`).join("");
+  const leg=MIX.map(([k,l,n])=>`<li class="${m.tot[k]?"":"zero"}"><i style="background:var(--m${n})"></i><span>${l}<small>${fmtDays(m.tot[k])} day${m.tot[k]===1?"":"s"}</small></span><b>${pct(m.tot[k],m.run)}%</b></li>`).join("");
+  const cols=m.weeks.map(w=>{
+    const tip=`W${w.wi+1} · ${w.type} · ${w.run} running day${w.run===1?"":"s"}\n`+MIX.filter(([k])=>w.wk[k]>0).map(([k,l])=>`${l}: ${fmtDays(w.wk[k])}`).join("\n");
+    return `<div class="mix-col" data-tip="${esc(tip)}" aria-label="${esc(tip.replace(/\n/g,", "))}">${MIX.filter(([k])=>w.wk[k]>0).map(([k,,n])=>`<span style="height:calc(${w.wk[k]/7*100}% - 2px);background:var(--m${n})"></span>`).join("")}</div>`;
+  }).join("");
+  const perWeek=(m.hard/p.weeks.length).toFixed(1);
+  return `<div class="mix-bar" role="img" aria-label="Training mix: ${MIX.filter(([k])=>m.tot[k]).map(([k,l])=>`${l} ${pct(m.tot[k],m.run)}%`).join(", ")}">${segs}</div>
+    <ul class="mix-leg">${leg}</ul>
+    <div class="mix-sum"><span>Easy vs harder: <b>${pct(m.tot.aerobic,m.run)}% / ${pct(m.hard,m.run)}%</b></span><span><b>${perWeek}</b> harder sessions a week</span><span><b>${m.run}</b> running days · ${m.rest} rest${m.blank?` · ${m.blank} not planned yet`:""}</span></div>
+    <p class="hint" style="margin:16px 0 0">By week: each column is that week's running days (up to 7), split by type. Hover for details.</p>
+    <div class="mix-weeks" aria-label="Training mix by week">${cols}</div>
+    <div class="mix-wl">${m.weeks.map(w=>`<span>${(w.wi+1)%2===1||m.weeks.length<14?"W"+(w.wi+1):""}</span>`).join("")}</div>`;
+}
+function refreshMix(){const el=$("#mix-body"),p=P();if(el&&p)el.innerHTML=mixHTML(p)}
+window.addEventListener("scroll",()=>{const t=$("#vtip");if(t)t.remove()},{passive:true});
+// one tooltip for every [data-tip] mark
+document.addEventListener("mousemove",e=>{
+  const t=e.target.closest&&e.target.closest("[data-tip]");let tip=$("#vtip");
+  if(!t){if(tip)tip.remove();return}
+  if(!tip){tip=document.createElement("div");tip.id="vtip";tip.className="vtip";document.body.appendChild(tip)}
+  tip.textContent=t.dataset.tip;
+  const x=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8),y=e.clientY+16+tip.offsetHeight>innerHeight?e.clientY-tip.offsetHeight-12:e.clientY+16;
+  tip.style.left=x+"px";tip.style.top=y+"px";
+});
 
 /* ---------- workout library ---------- */
 const TPL_CATS=[["threshold","Threshold"],["intervals","Intervals"],["speed","Speed"],["hills","Hills"],["fartlek","Fartlek"],["mp","Marathon pace"],["long","Long runs"],["easy","Easy & recovery"]];
